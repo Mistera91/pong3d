@@ -87,14 +87,14 @@ def isUnderPaddle():
 
 def isOverPaddles():
     global ball, paddle
-    onPlatformLeft = ball.x+ball.size > paddle.leftX - paddle.sideLen/2 and ball.x - \
-        ball.size < paddle.leftX + paddle.sideLen/2 and \
-        ball.z+ball.size > paddle.leftZ - paddle.sideLen/2 and ball.z - \
-        ball.size < paddle.leftZ + paddle.sideLen/2
-    onPlatformRight = ball.x+ball.size > paddle.rightX - paddle.sideLen/2 and ball.x - \
-        ball.size < paddle.rightX + paddle.sideLen/2 and \
-        ball.z+ball.size > paddle.rightZ - paddle.sideLen/2 and ball.z - \
-        ball.size < paddle.rightZ + paddle.sideLen/2
+    onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
+        ball.size < paddle.leftX + (paddle.sideLen * leftSizeFactor)/2 and \
+        ball.z+ball.size > paddle.leftZ - (paddle.sideLen * leftSizeFactor)/2 and ball.z - \
+        ball.size < paddle.leftZ + (paddle.sideLen * leftSizeFactor)/2
+    onPlatformRight = ball.x+ball.size > paddle.rightX - (paddle.sideLen * rightSizeFactor)/2 and ball.x - \
+        ball.size < paddle.rightX + (paddle.sideLen * rightSizeFactor)/2 and \
+        ball.z+ball.size > paddle.rightZ - (paddle.sideLen * rightSizeFactor)/2 and ball.z - \
+        ball.size < paddle.rightZ + (paddle.sideLen * rightSizeFactor)/2
     return onPlatformLeft or onPlatformRight
 
 def isStrictlyOverPaddles():
@@ -302,6 +302,13 @@ def drawMenu():
             game.abilityRight = hoveredAbilityNumber
 
 def drawFrame():
+    global leftSizeFactor, rightSizeFactor
+    leftSizeFactor = 1
+    if game.abilityLeft == 0:
+        leftSizeFactor = 1.5
+    rightSizeFactor = 1
+    if game.abilityRight == 0:
+        rightSizeFactor = 1.5
     noCursor()
     game.rainbow += 1
     if game.rainbow == 256: game.rainbow = 0
@@ -350,8 +357,8 @@ def drawFrame():
         paddle.leftX -= paddle.speedX
     if paddle.leftMovX and not paddle.leftMovZneg and not paddle.leftMovZ:
         paddle.leftX += paddle.speedX
-    paddle.leftX = constrain(paddle.leftX, -width/2 + paddle.sideLen/2, 0 - paddle.sideLen/2)
-    paddle.leftZ = constrain(paddle.leftZ, -width/4 + paddle.sideLen/2, width/4 - paddle.sideLen/2)
+    paddle.leftX = constrain(paddle.leftX, -width/2 + (paddle.sideLen * leftSizeFactor)/2, 0 - (paddle.sideLen * leftSizeFactor)/2)
+    paddle.leftZ = constrain(paddle.leftZ, -width/4 + (paddle.sideLen * leftSizeFactor)/2, width/4 - (paddle.sideLen * leftSizeFactor)/2)
 
     # Drawing the left box
     rectMode(CENTER)
@@ -372,7 +379,7 @@ def drawFrame():
     if game.abilityLeft == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
     else: fill(0, 0, 127); stroke(0, 0, 255)
     translate(paddle.leftX, height/2 - paddle.sideLen / 32, paddle.leftZ)
-    box(paddle.sideLen, paddle.sideLen / 16, paddle.sideLen)
+    box(paddle.sideLen * leftSizeFactor, paddle.sideLen / 16, paddle.sideLen * leftSizeFactor)
     colorMode(RGB)
     # Right paddle
     paddle.rightMovZneg = False
@@ -407,15 +414,15 @@ def drawFrame():
         paddle.rightX -= paddle.speedX
     if paddle.rightMovX and not paddle.rightMovZneg and not paddle.rightMovZ:
         paddle.rightX += paddle.speedX
-    paddle.rightX = constrain(paddle.rightX, 0 + paddle.sideLen/2, width/2 - paddle.sideLen/2)
-    paddle.rightZ = constrain(paddle.rightZ, -width/4 + paddle.sideLen/2, width/4 - paddle.sideLen/2)
+    paddle.rightX = constrain(paddle.rightX, 0 + (paddle.sideLen * rightSizeFactor)/2, width/2 - (paddle.sideLen * rightSizeFactor)/2)
+    paddle.rightZ = constrain(paddle.rightZ, -width/4 + (paddle.sideLen * rightSizeFactor)/2, width/4 - (paddle.sideLen * rightSizeFactor)/2)
     if game.abilityRight == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
     else: fill(127, 0, 0); stroke(255, 0, 0)
     rectMode(CENTER)
     popMatrix()
     pushMatrix()
     translate(paddle.rightX, height/2 - paddle.sideLen / 32, paddle.rightZ)
-    box(paddle.sideLen, paddle.sideLen / 16, paddle.sideLen)
+    box(paddle.sideLen * rightSizeFactor, paddle.sideLen / 16, paddle.sideLen * rightSizeFactor)
     colorMode(RGB)
     popMatrix()
     render()
