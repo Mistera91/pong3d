@@ -4,6 +4,7 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
+        rainbow = 0
         scoreLeft = 0
         scoreRight = 0
         abilityLeft = -1
@@ -296,14 +297,14 @@ def drawMenu():
     if game.mouseClicked:
         game.mouseClicked = False
         if not game.abilityLeft >= 0:
-            print("abilityLeftChosen")
             game.abilityLeft = hoveredAbilityNumber
         else: 
-            print("abilityRightChosen")
             game.abilityRight = hoveredAbilityNumber
 
 def drawFrame():
-    shininess(0.0)
+    noCursor()
+    game.rainbow += 1
+    if game.rainbow == 256: game.rainbow = 0
     fill(255)
     ball.colorBonus = constrain(ball.colorBonus - 5, 0, 150)
     game.leftTextColorBonus = constrain(game.leftTextColorBonus - 3, 0, 100)
@@ -368,10 +369,11 @@ def drawFrame():
     fill("#1C1C2C")
     box(width, 0, width/2)
     popMatrix()
-    fill(0, 0, 127)
-    stroke(0, 0, 255)
+    if game.abilityLeft == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
+    else: fill(0, 0, 127); stroke(0, 0, 255)
     translate(paddle.leftX, height/2 - paddle.sideLen / 32, paddle.leftZ)
     box(paddle.sideLen, paddle.sideLen / 16, paddle.sideLen)
+    colorMode(RGB)
     # Right paddle
     paddle.rightMovZneg = False
     paddle.rightMovZ = False
@@ -407,13 +409,14 @@ def drawFrame():
         paddle.rightX += paddle.speedX
     paddle.rightX = constrain(paddle.rightX, 0 + paddle.sideLen/2, width/2 - paddle.sideLen/2)
     paddle.rightZ = constrain(paddle.rightZ, -width/4 + paddle.sideLen/2, width/4 - paddle.sideLen/2)
-    stroke(255, 0, 0)
-    fill(127, 0, 0)
+    if game.abilityRight == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
+    else: fill(127, 0, 0); stroke(255, 0, 0)
     rectMode(CENTER)
     popMatrix()
     pushMatrix()
     translate(paddle.rightX, height/2 - paddle.sideLen / 32, paddle.rightZ)
     box(paddle.sideLen, paddle.sideLen / 16, paddle.sideLen)
+    colorMode(RGB)
     popMatrix()
     render()
 
