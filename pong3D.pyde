@@ -314,11 +314,17 @@ def drawMenu():
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
     leftSizeFactor = 1
+    leftSpeedFactor = 1
     if game.abilityLeft == 0:
-        leftSizeFactor = 1.5
+        leftSizeFactor = 1.25
+    elif game.abilityLeft == 2:
+        leftSpeedFactor = 1.25
     rightSizeFactor = 1
+    rightSpeedFactor = 1
     if game.abilityRight == 0:
         rightSizeFactor = 1.5
+    elif game.abilityRight == 2:
+        rightSpeedFactor = 1.25
     noCursor()
     game.rainbow += 1
     if game.rainbow == 256: game.rainbow = 0
@@ -348,25 +354,25 @@ def drawFrame():
     if keys.D and not keys.Q:
         paddle.leftMovX = True
     if paddle.leftMovZneg and paddle.leftMovXneg:
-        paddle.leftX -= paddle.speedX * 0.707106781
-        paddle.leftZ -= paddle.speedZ * 0.707106781
+        paddle.leftX -= paddle.speedX * leftSpeedFactor * 0.707106781
+        paddle.leftZ -= paddle.speedZ * leftSpeedFactor * 0.707106781
     if paddle.leftMovZ and paddle.leftMovXneg:
-        paddle.leftX -= paddle.speedX * 0.707106781
-        paddle.leftZ += paddle.speedZ * 0.707106781
+        paddle.leftX -= paddle.speedX * leftSpeedFactor * 0.707106781
+        paddle.leftZ += paddle.speedZ * leftSpeedFactor * 0.707106781
     if paddle.leftMovZneg and paddle.leftMovX:
-        paddle.leftX += paddle.speedX * 0.707106781
-        paddle.leftZ -= paddle.speedZ * 0.707106781
+        paddle.leftX += paddle.speedX * leftSpeedFactor * 0.707106781
+        paddle.leftZ -= paddle.speedZ * leftSpeedFactor * 0.707106781
     if paddle.leftMovZ and paddle.leftMovX:
-        paddle.leftX += paddle.speedX * 0.707106781
-        paddle.leftZ += paddle.speedZ * 0.707106781
+        paddle.leftX += paddle.speedX * leftSpeedFactor * 0.707106781
+        paddle.leftZ += paddle.speedZ * leftSpeedFactor * 0.707106781
     if paddle.leftMovZneg and not paddle.leftMovXneg and not paddle.leftMovX:
-        paddle.leftZ -= paddle.speedZ
+        paddle.leftZ -= paddle.speedZ * leftSpeedFactor
     if paddle.leftMovZ and not paddle.leftMovXneg and not paddle.leftMovX:
-        paddle.leftZ += paddle.speedZ
+        paddle.leftZ += paddle.speedZ * leftSpeedFactor
     if paddle.leftMovXneg and not paddle.leftMovZneg and not paddle.leftMovZ:
-        paddle.leftX -= paddle.speedX
+        paddle.leftX -= paddle.speedX * leftSpeedFactor
     if paddle.leftMovX and not paddle.leftMovZneg and not paddle.leftMovZ:
-        paddle.leftX += paddle.speedX
+        paddle.leftX += paddle.speedX * leftSpeedFactor
     paddle.leftX = constrain(paddle.leftX, -width/2 + (paddle.sideLen * leftSizeFactor)/2, 0 - (paddle.sideLen * leftSizeFactor)/2)
     paddle.leftZ = constrain(paddle.leftZ, -width/4 + (paddle.sideLen * leftSizeFactor)/2, width/4 - (paddle.sideLen * leftSizeFactor)/2)
 
@@ -405,25 +411,25 @@ def drawFrame():
     if keys.RIGHT_ARROW and not keys.LEFT_ARROW:
         paddle.rightMovX = True
     if paddle.rightMovZneg and paddle.rightMovXneg:
-        paddle.rightX -= paddle.speedX * 0.707106781
-        paddle.rightZ -= paddle.speedZ * 0.707106781
+        paddle.rightX -= paddle.speedX * rightSpeedFactor * 0.707106781
+        paddle.rightZ -= paddle.speedZ * rightSpeedFactor * 0.707106781
     if paddle.rightMovZ and paddle.rightMovXneg:
-        paddle.rightX -= paddle.speedX * 0.707106781
-        paddle.rightZ += paddle.speedZ * 0.707106781
+        paddle.rightX -= paddle.speedX * rightSpeedFactor * 0.707106781
+        paddle.rightZ += paddle.speedZ * rightSpeedFactor * 0.707106781
     if paddle.rightMovZneg and paddle.rightMovX:
-        paddle.rightX += paddle.speedX * 0.707106781
-        paddle.rightZ -= paddle.speedZ * 0.707106781
+        paddle.rightX += paddle.speedX * rightSpeedFactor * 0.707106781
+        paddle.rightZ -= paddle.speedZ * rightSpeedFactor * 0.707106781
     if paddle.rightMovZ and paddle.rightMovX:
-        paddle.rightX += paddle.speedX * 0.707106781
-        paddle.rightZ += paddle.speedZ * 0.707106781
+        paddle.rightX += paddle.speedX * rightSpeedFactor * 0.707106781
+        paddle.rightZ += paddle.speedZ * rightSpeedFactor * 0.707106781
     if paddle.rightMovZneg and not paddle.rightMovXneg and not paddle.rightMovX:
-        paddle.rightZ -= paddle.speedZ
+        paddle.rightZ -= paddle.speedZ * rightSpeedFactor
     if paddle.rightMovZ and not paddle.rightMovXneg and not paddle.rightMovX:
-        paddle.rightZ += paddle.speedZ
+        paddle.rightZ += paddle.speedZ * rightSpeedFactor
     if paddle.rightMovXneg and not paddle.rightMovZneg and not paddle.rightMovZ:
-        paddle.rightX -= paddle.speedX
+        paddle.rightX -= paddle.speedX * rightSpeedFactor
     if paddle.rightMovX and not paddle.rightMovZneg and not paddle.rightMovZ:
-        paddle.rightX += paddle.speedX
+        paddle.rightX += paddle.speedX * rightSpeedFactor
     paddle.rightX = constrain(paddle.rightX, 0 + (paddle.sideLen * rightSizeFactor)/2, width/2 - (paddle.sideLen * rightSizeFactor)/2)
     paddle.rightZ = constrain(paddle.rightZ, -width/4 + (paddle.sideLen * rightSizeFactor)/2, width/4 - (paddle.sideLen * rightSizeFactor)/2)
     if game.abilityRight == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
