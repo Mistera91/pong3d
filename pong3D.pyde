@@ -15,6 +15,8 @@ def setup():
         drawMenuNextCall = True
         stopDrawMenu = True
         mouseClicked = False
+        onPlatformRight = False
+        onPlatformLeft = False
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                  ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"        ],
@@ -87,27 +89,27 @@ def isUnderPaddle():
 
 def isOverPaddles():
     global ball, paddle
-    onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
+    game.onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
         ball.size < paddle.leftX + (paddle.sideLen * leftSizeFactor)/2 and \
         ball.z+ball.size > paddle.leftZ - (paddle.sideLen * leftSizeFactor)/2 and ball.z - \
         ball.size < paddle.leftZ + (paddle.sideLen * leftSizeFactor)/2
-    onPlatformRight = ball.x+ball.size > paddle.rightX - (paddle.sideLen * rightSizeFactor)/2 and ball.x - \
+    game.onPlatformRight = ball.x+ball.size > paddle.rightX - (paddle.sideLen * rightSizeFactor)/2 and ball.x - \
         ball.size < paddle.rightX + (paddle.sideLen * rightSizeFactor)/2 and \
         ball.z+ball.size > paddle.rightZ - (paddle.sideLen * rightSizeFactor)/2 and ball.z - \
         ball.size < paddle.rightZ + (paddle.sideLen * rightSizeFactor)/2
-    return onPlatformLeft or onPlatformRight
+    return game.onPlatformLeft or game.onPlatformRight
 
 def isStrictlyOverPaddles():
     global ball, paddle
-    onPlatformLeft = ball.x-ball.size > paddle.leftX - paddle.sideLen/2 and ball.x + \
+    game.onPlatformLeft = ball.x-ball.size > paddle.leftX - paddle.sideLen/2 and ball.x + \
         ball.size < paddle.leftX + paddle.sideLen/2 and \
         ball.z-ball.size > paddle.leftZ - paddle.sideLen/2 and ball.z + \
         ball.size < paddle.leftZ + paddle.sideLen/2
-    onPlatformRight = ball.x-ball.size > paddle.rightX - paddle.sideLen/2 and ball.x + \
+    game.onPlatformRight = ball.x-ball.size > paddle.rightX - paddle.sideLen/2 and ball.x + \
         ball.size < paddle.rightX + paddle.sideLen/2 and \
         ball.z-ball.size > paddle.rightZ - paddle.sideLen/2 and ball.z + \
         ball.size < paddle.rightZ + paddle.sideLen/2
-    return onPlatformLeft or onPlatformRight
+    return game.onPlatformLeft or game.onPlatformRight
 
 def isCollidingWithWallX():
     global ball
@@ -125,6 +127,12 @@ def render():
     global ball, paddle, game
     if isUnderPaddle():
         if isOverPaddles():
+            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.10): 
+                ball.vx *= 5
+                ball.vz *= 2.5
+            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.10):
+                ball.vx *= 5
+                ball.vz *= 2.5
             ball.vy = ball.velocityAfterPaddleCollition
             ball.colorBonus = 200
         else:
@@ -148,9 +156,11 @@ def render():
     if isCollidingWithWallX():
         ball.vx = -1 * ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
         ball.colorBonus = 200
+        ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
     if isCollidingWithWallZ():
         ball.vz = -1 * ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
         ball.colorBonus = 200
+        ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
     ball.vx *= ball.fx
     ball.vx = max(abs(ball.vx), abs(ball.vxMin))*(ball.vx / abs(ball.vx))
     ball.vz *= ball.fz
