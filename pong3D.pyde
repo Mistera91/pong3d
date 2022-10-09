@@ -4,6 +4,7 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
+        againstBot           = True
         setPoints            = 5
         rainbow              = 0
         scoreLeft            = 0
@@ -27,8 +28,10 @@ def setup():
         framesDarknessLeft   = 300
         framesDarknessRight  = 300
         framesToRestart      = 0
+        framesToDifficulty   = 0
         announcedText        = ""
         announcedTextFrames  = 0
+        difficulty           = 0
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                   ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"         ],
@@ -40,6 +43,8 @@ def setup():
 ["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
 ]
         buttonsCoords = [None for i in range(len(abilities))]
+        if againstBot:
+            abilityRight = int(random(0, len(abilities)))
 
     class keys:
         Z = False
@@ -150,12 +155,16 @@ def drawBall():
             if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.2): 
                 ball.vx *= 5
                 ball.vz *= 2.5
+                game.announcedText       = "The ball got boosted by blue !"
+                game.announcedTextFrames = 300
 
             if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.2):
                 ball.vx *= 5
                 ball.vz *= 2.5
+                game.announcedText       = "The ball got boosted by red !"
+                game.announcedTextFrames = 300
 
-            ball.vy = ball.velocityAfterPaddleCollition
+            ball.vy = ball.velocityAfterPaddleCollition * (1 + game.difficulty * 0.05)
             ball.colorBonus = 200
 
         else:
@@ -178,7 +187,8 @@ def drawBall():
 
             if float(random(1)) > float(0.5):
                 ball.vz *= -1
-
+            game.difficulty = 0
+            game.framesToDifficulty = 0
             ball.x = 0
             ball.y = 0
             ball.z = 0
@@ -216,19 +226,19 @@ def drawBall():
             ball.vz = ball.tempvz
 
         if isCollidingWithWallX():
-            ball.vx = -1 * ball.vx + ball.velocityFactorAfterWallCollition/(ball.vx)/2#ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
+            ball.vx = -1 * ball.vx + (ball.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(ball.vx)/2#ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
             ball.colorBonus = 200
             ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
 
         if isCollidingWithWallZ():
-            ball.vz = -1 * ball.vz + ball.velocityFactorAfterWallCollition/(ball.vz)/2#ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
+            ball.vz = -1 * ball.vz + (ball.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(ball.vz)/2#ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
             ball.colorBonus = 200
             ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
 
         ball.vx *= ball.fx
-        ball.vx = max(abs(ball.vx), abs(ball.vxMin))*(ball.vx / abs(ball.vx))
+        ball.vx = max(abs(ball.vx), abs(ball.vxMin * (1 + game.difficulty * 0.25)))*(ball.vx / abs(ball.vx))
         ball.vz *= ball.fz
-        ball.vz = max(abs(ball.vz), abs(ball.vzMin))*(ball.vz / abs(ball.vz))
+        ball.vz = max(abs(ball.vz), abs(ball.vzMin * (1 + game.difficulty * 0.25)))*(ball.vz / abs(ball.vz))
 
         if ball.framesSinceSlow < 300:
             ball.x += ball.vx/2
@@ -270,7 +280,7 @@ def drawBall():
     textMode(SHAPE)
     textAlign(CENTER, CENTER)
     textSize(48)
-    fill(min(game.announcedTextFrames, 255))
+    fill(floor(min(game.announcedTextFrames, 255)/50)*50)
     text(game.announcedText, 0, 0)
     popMatrix()
     # Shadow
@@ -393,6 +403,14 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
+    if game.againstBot:
+        if random(1) < 0.001:
+            keys.INFERIOR = True
+    game.framesToDifficulty   += 1
+    if game.framesToDifficulty % 600 == 0:
+        game.difficulty         += 1
+        game.announcedText       = "Difficulty increased !"
+        game.announcedTextFrames = 255
     game.announcedTextFrames  -= 1
     game.framesConfusionLeft  += 1
     game.framesConfusionRight += 1
@@ -419,18 +437,26 @@ def drawFrame():
         rightSpeedFactor *= -1
     if (keys.F and game.abilityLeft == 4 and game.abilityCountLeft >= 1) and game.framesConfusionRight > 100:
         keys.F = False
+        game.announcedText       = "Red got confused !"
+        game.announcedTextFrames = 300
         game.framesConfusionRight = 0
         game.abilityCountLeft -= 1
     if (keys.INFERIOR and game.abilityRight == 4 and game.abilityCountRight >= 1) and game.framesConfusionLeft > 100:
         keys.INFERIOR = False
+        game.announcedText       = "Blue got confused !"
+        game.announcedTextFrames = 300
         game.framesConfusionLeft = 0
         game.abilityCountRight -= 1
     if (keys.F and game.abilityLeft == 6 and game.abilityCountLeft >= 1) and game.framesDarknessRight > 300 and game.framesDarknessLeft > 300:
         keys.F = False
+        game.announcedText       = "Lights off for red !"
+        game.announcedTextFrames = 300
         game.framesDarknessRight = 0
         game.abilityCountLeft -= 1
     if (keys.INFERIOR and game.abilityRight == 6 and game.abilityCountRight >= 1) and game.framesDarknessRight > 300 and game.framesDarknessRight > 300:
         keys.INFERIOR = False
+        game.announcedText       = "Lights off for blue !"
+        game.announcedTextFrames = 300
         game.framesDarknessLeft = 0
         game.abilityCountRight -= 1
     noCursor()
