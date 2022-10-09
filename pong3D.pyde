@@ -1,7 +1,7 @@
 def setup():
     global keys, paddle, ball, game
     fullScreen()
-    size(1000, 500, P3D)
+    size(1200, 900, P3D)
 
     class game:
         againstBot           = True
@@ -146,6 +146,23 @@ def isCollidingWithWallZ():
     onWallPosZ = ball.z+ball.size >= width/4
     return onWallNegZ or onWallPosZ
 
+def botDirection():
+    global game, keys
+    predBallX = ball.x + ball.vx * (10 - game.difficulty)
+    predBallZ = ball.z + ball.vz * (10 - game.difficulty)
+    keys.LEFT_ARROW = False
+    keys.RIGHT_ARROW = False
+    keys.UP_ARROW = False
+    keys.DOWN_ARROW = False
+    if predBallX > paddle.rightX:
+        keys.RIGHT_ARROW = True
+    elif predBallX < paddle.rightX:
+        keys.LEFT_ARROW = True
+    if predBallZ > paddle.rightZ:
+        keys.DOWN_ARROW = True
+    elif predBallZ < paddle.rightZ:
+        keys.UP_ARROW = True
+
 def drawBall():
     global ball, paddle, game
     ball.framesSinceFreeze += 1
@@ -187,8 +204,8 @@ def drawBall():
 
             if float(random(1)) > float(0.5):
                 ball.vz *= -1
-            game.difficulty = 0
-            game.framesToDifficulty = 0
+            #game.difficulty = 0
+            #game.framesToDifficulty = 0
             ball.x = 0
             ball.y = 0
             ball.z = 0
@@ -252,9 +269,15 @@ def drawBall():
     noStroke()
     fill(ball.colors[0] + ball.colorBonus, ball.colors[1] +
          ball.colorBonus, ball.colors[2] + ball.colorBonus)
+    # Sphere
     pushMatrix()
     translate(ball.x, ball.y, ball.z)
     sphere(ball.size)
+    popMatrix()
+    pushMatrix()
+    fill(255)
+    translate(ball.x + (10 - game.difficulty)*ball.vx, ball.y, ball.z + (10 - game.difficulty)*ball.vz)
+    sphere(ball.size/2)
     popMatrix()
     # Blue text
     pushMatrix()
@@ -374,9 +397,9 @@ def drawMenu():
                 image(loadImage(game.abilities[ability][1]), (ability + 1) * buttonWidth + ability * spaceWidth, height/3, buttonWidth, buttonWidth)
                 game.buttonsCoords[ability] = [(ability + 1) * buttonWidth + ability * spaceWidth, (ability + 1) * buttonWidth + ability * spaceWidth + buttonWidth]        
         fill(0)
-        rect(0, height/2, width, height/2)
+        rect(width/8 - width/16, height/2 + height/16, width - width/4 + width/8, height/2 - height/8, width/32)
     for coords in range(len(game.buttonsCoords)):
-        if mouseY > height/3 and mouseY < height/3 + buttonWidth :
+        if mouseY > height/3 and mouseY < height/3 + buttonWidth:
             if mouseX > game.buttonsCoords[coords][0] and mouseX < game.buttonsCoords[coords][1]:
                 handCursor = True
                 hoveredAbility = True
@@ -385,13 +408,13 @@ def drawMenu():
     if hoveredAbility:
         cursor(HAND)
         fill(0)
-        rect(0, height/2, width, height/2)
+        rect(width/8 - width/16, height/2 + height/16, width - width/4 + width/8, height/2 - height/8, width/32)
         fill(255)
         textAlign(CENTER, CENTER)
         textSize(width/25)
-        text(game.abilities[hoveredAbilityNumber][0], 0, height/2, width, height/3)
+        text(game.abilities[hoveredAbilityNumber][0], width/8, height/2, width - width/4, height/3)
         textSize(width/40)
-        text(game.abilities[hoveredAbilityNumber][2], 0, height - height/4, width, height/4)
+        text(game.abilities[hoveredAbilityNumber][2], width/8, height - height/4, width - width/4, height/4 - height/16)
     else: 
         cursor(ARROW)
     if game.mouseClicked:
@@ -403,6 +426,7 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
+    botDirection()
     if game.againstBot:
         if random(1) < 0.001:
             keys.INFERIOR = True
