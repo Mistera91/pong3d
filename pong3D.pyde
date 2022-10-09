@@ -280,7 +280,7 @@ def drawBall():
     textMode(SHAPE)
     textAlign(CENTER, CENTER)
     textSize(48)
-    fill(floor(min(game.announcedTextFrames, 255)/50)*50)
+    fill(255)
     text(game.announcedText, 0, 0)
     popMatrix()
     # Shadow
