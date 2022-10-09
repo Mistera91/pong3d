@@ -40,6 +40,7 @@ def setup():
 ["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
 ]
         buttonsCoords = [None for i in range(len(abilities))]
+
     class keys:
         Z = False
         Q = False
@@ -409,7 +410,7 @@ def drawFrame():
     rightSizeFactor = 1
     rightSpeedFactor = 1
     if game.abilityRight == 0:
-        rightSizeFactor = 1.5
+        rightSizeFactor = 1.25
     elif game.abilityRight == 2:
         rightSpeedFactor = 1.25
     if game.framesConfusionLeft < 100:
