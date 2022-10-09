@@ -4,35 +4,40 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
-        rainbow = 0
-        scoreLeft = 0
-        scoreRight = 0
-        abilityLeft = -1
-        abilityRight = -1
-        abilityCountLeft = 3
-        abilityCountRight = 3
-        rightTextColorBonus = 0
-        leftTextColorBonus = 0
-        menuCompleted = False
-        drawMenuNextCall = True
-        stopDrawMenu = True
-        mouseClicked = False
-        onPlatformRight = False
-        onPlatformLeft = False
-        framesConfusionLeft = 100
+        setPoints            = 5
+        rainbow              = 0
+        scoreLeft            = 0
+        scoreRight           = 0
+        setsLeft             = 0
+        setsRight            = 0
+        abilityLeft          = -1
+        abilityRight         = -1
+        abilityCountLeft     = 3
+        abilityCountRight    = 3
+        rightTextColorBonus  = 0
+        leftTextColorBonus   = 0
+        menuCompleted        = False
+        drawMenuNextCall     = True
+        stopDrawMenu         = True
+        mouseClicked         = False
+        onPlatformRight      = False
+        onPlatformLeft       = False
+        framesConfusionLeft  = 100
         framesConfusionRight = 100
-        framesDarknessLeft = 300
-        framesDarknessRight = 300
-        framesToRestart = 0
+        framesDarknessLeft   = 300
+        framesDarknessRight  = 300
+        framesToRestart      = 0
+        announcedText        = ""
+        announcedTextFrames  = 0
         abilities = [
-["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                  ],
-["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"        ],
-["Sprint pad"  , "a3.png" , "Increases the speed of the paddle"                                                                 ],
+["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                   ],
+["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"         ],
+["Sprint pad"  , "a3.png" , "Increases the speed of the paddle"                                                                  ],
 ["Big freeze"  , "a4.png" , "Briefly frezzes the ball when you use it.\nIt can only be used 3 times per game"                    ],
 ["Confusion"   , "a5.png" , "Inverts the controls of the opposite player for a short time.\nIt can only be used 3 times per game"],
 ["Small freeze", "a6.png" , "Slows the ball for a short time.\nIt can only be used 3 times per game"                             ],
 ["Darkness"    , "a7.png" , "Reduces the light onto the enemy side for a short time.\nIt can only be used 3 times per game"      ],
-["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                               ]
+["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
 ]
         buttonsCoords = [None for i in range(len(abilities))]
     class keys:
@@ -90,6 +95,7 @@ def setup():
         tempvz = 0
         framesSinceFreeze = 52
         framesSinceSlow = 300
+
 def isUnderground():
     global ball
     return ball.y > height
@@ -239,22 +245,32 @@ def drawBall():
     translate(ball.x, ball.y, ball.z)
     sphere(ball.size)
     popMatrix()
+    # Blue text
     pushMatrix()
-    translate(-width/2 + width/8, -height/2 + height/8, width/4)
+    translate(-width/2 + width/16, -height/2 + height/8, width/4)
     textMode(SHAPE)
-    textAlign(CENTER, CENTER)
-    textSize(96)
+    textAlign(LEFT, CENTER)
+    textSize(48)
     fill(70 + game.leftTextColorBonus * 1.85, 70 + game.leftTextColorBonus * 1.85, 155 + game.leftTextColorBonus)
-    text(game.scoreLeft, 0, 0)
+    text(str(game.scoreLeft) + " points, " + str(game.setsLeft) + " sets", 0, 0)
     popMatrix()
+    # Red text
     pushMatrix()
-    translate(width/2 - width/8, -height/2 + height/8, width/4)
+    translate(width/2 - width/16, -height/2 + height/8, width/4)
+    textMode(SHAPE)
+    textAlign(RIGHT, CENTER)
+    textSize(48)
+    fill(155 + game.rightTextColorBonus, 70 + game.rightTextColorBonus * 1.85, 70 + game.rightTextColorBonus * 1.85)
+    text(str(game.scoreRight) + " points, " + str(game.setsRight) + " sets", 0, 0)
+    popMatrix()
+    # Announcement text
+    pushMatrix()
+    translate(0, -height/4, width/4)
     textMode(SHAPE)
     textAlign(CENTER, CENTER)
-    textSize(96)
-
-    fill(155 + game.rightTextColorBonus, 70 + game.rightTextColorBonus * 1.85, 70 + game.rightTextColorBonus * 1.85)
-    text(game.scoreRight, 0, 0)
+    textSize(48)
+    fill(min(game.announcedTextFrames, 255))
+    text(game.announcedText, 0, 0)
     popMatrix()
     # Shadow
     pushMatrix()
@@ -376,6 +392,7 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
+    game.announcedTextFrames  -= 1
     game.framesConfusionLeft  += 1
     game.framesConfusionRight += 1
     game.framesDarknessLeft   += 1
@@ -383,6 +400,8 @@ def drawFrame():
     game.framesToRestart      += 1
     leftSizeFactor = 1
     leftSpeedFactor = 1
+    if game.announcedTextFrames < 1:
+        game.announcedText = ""
     if game.abilityLeft == 0:
         leftSizeFactor = 1.25
     elif game.abilityLeft == 2:
@@ -432,8 +451,6 @@ def drawFrame():
         spotLight(255, 255, 255, width/2, 0, width/4, 0, 1, -0.5, TAU, 0)
 
     translate(width/2, height/2, -width/4)
-    text(game.scoreLeft, width/8, height/8, 110)
-    text(game.scoreRight, width - width/8, height - height/8, 100)
     pushMatrix()
     background(0)
     fill(127)
@@ -476,7 +493,7 @@ def drawFrame():
     rectMode(CENTER)
     noStroke()
     fill(0, 0, 255)
-    stroke(255)
+    stroke(127, 0, 255)
     noFill()
     box(width, height, width/2)
     pushMatrix()
@@ -541,6 +558,24 @@ def drawFrame():
 
 def draw():
     global keys, paddle, ball, game
+    if game.scoreLeft >= game.setPoints:
+        game.announcedText       = "Set won by Blue, abilities reset"
+        game.announcedTextFrames = 400
+        game.leftTextColorBonus  = 100
+        game.scoreRight          = 0
+        game.scoreLeft           = 0
+        game.setsLeft           += 1
+        game.abilityCountLeft    = 3
+        game.abilityCountRight   = 4
+    if game.scoreRight >= game.setPoints:
+        game.announcedText       = "Set won by Red, abilities reset"
+        game.announcedTextFrames = 300
+        game.rightTextColorBonus = 100
+        game.scoreRight          = 0
+        game.scoreLeft           = 0
+        game.setsRight          += 1
+        game.abilityCountLeft    = 3
+        game.abilityCountRight   = 4
     if game.menuCompleted:
         drawFrame()
     else: drawMenu()
