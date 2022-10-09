@@ -21,6 +21,8 @@ def setup():
         onPlatformLeft = False
         framesConfusionLeft = 100
         framesConfusionRight = 100
+        framesDarknessLeft = 300
+        framesDarknessRight = 300
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                  ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"        ],
@@ -375,6 +377,8 @@ def drawFrame():
     global leftSizeFactor, rightSizeFactor
     game.framesConfusionLeft  += 1
     game.framesConfusionRight += 1
+    game.framesDarknessLeft   += 1
+    game.framesDarknessRight  += 1
     leftSizeFactor = 1
     leftSpeedFactor = 1
     if game.abilityLeft == 0:
@@ -399,6 +403,14 @@ def drawFrame():
         keys.INFERIOR = False
         game.framesConfusionLeft = 0
         game.abilityCountRight -= 1
+    if (keys.F and game.abilityLeft == 6 and game.abilityCountLeft >= 1) and game.framesDarknessRight > 300 and game.framesDarknessLeft > 300:
+        keys.F = False
+        game.framesDarknessRight = 0
+        game.abilityCountLeft -= 1
+    if (keys.INFERIOR and game.abilityRight == 6 and game.abilityCountRight >= 1) and game.framesDarknessRight > 300 and game.framesDarknessRight > 300:
+        keys.INFERIOR = False
+        game.framesDarknessLeft = 0
+        game.abilityCountRight -= 1
     noCursor()
     game.rainbow += 1
     if game.rainbow == 256: game.rainbow = 0
@@ -408,7 +420,15 @@ def drawFrame():
     game.rightTextColorBonus = constrain(game.rightTextColorBonus - 3, 0, 100)
     camera(width/2.0, height/2, (height/2.0) / tan(PI*30.0 / 180.0) -
            00, width/2.0, height/2.0, 0, 0, 1, 0)
-    spotLight(255, 255, 255, width/2, 1, width/4, 0, 1, 0, TAU, 0)
+    if game.framesDarknessRight < 300:
+        spotLight(255, 255, 255, width/2, 0, 0, -1, 1, -0.5, TAU/4, 0.75)
+
+    elif  game.framesDarknessLeft < 300:
+        spotLight(255, 255, 255, width/2, 0, 0, 1, 1, -0.5, TAU/4, 0.75)
+
+    else:
+        spotLight(255, 255, 255, width/2, 0, width/4, 0, 1, -0.5, TAU, 0)
+
     translate(width/2, height/2, -width/4)
     text(game.scoreLeft, width/8, height/8, 110)
     text(game.scoreRight, width - width/8, height - height/8, 100)
