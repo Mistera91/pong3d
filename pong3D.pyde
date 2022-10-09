@@ -23,6 +23,7 @@ def setup():
         framesConfusionRight = 100
         framesDarknessLeft = 300
         framesDarknessRight = 300
+        framesToRestart = 0
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                  ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"        ],
@@ -133,7 +134,7 @@ def isCollidingWithWallZ():
     onWallPosZ = ball.z+ball.size >= width/4
     return onWallNegZ or onWallPosZ
 
-def render():
+def drawBall():
     global ball, paddle, game
     ball.framesSinceFreeze += 1
     ball.framesSinceSlow += 1
@@ -158,7 +159,7 @@ def render():
             elif ball.x < 0:
                 game.scoreRight += 1
                 game.rightTextColorBonus = 200
-
+            game.framesToRestart = 0
             print(game.scoreLeft, game.scoreRight)
             ball.vx = int(random(1, 8))
 
@@ -201,7 +202,7 @@ def render():
             keys.INFERIOR = False
         ball.framesSinceSlow = 0
 
-    if ball.framesSinceFreeze > 50:
+    if ball.framesSinceFreeze > 50 and game.framesToRestart > 90:
         if ball.framesSinceFreeze == 51:
             ball.vx = ball.tempvx
             ball.vy = ball.tempvy
@@ -379,6 +380,7 @@ def drawFrame():
     game.framesConfusionRight += 1
     game.framesDarknessLeft   += 1
     game.framesDarknessRight  += 1
+    game.framesToRestart      += 1
     leftSizeFactor = 1
     leftSpeedFactor = 1
     if game.abilityLeft == 0:
@@ -535,7 +537,7 @@ def drawFrame():
     box(paddle.sideLen * rightSizeFactor, paddle.sideLen / 16, paddle.sideLen * rightSizeFactor)
     colorMode(RGB)
     popMatrix()
-    render()
+    drawBall()
 
 def draw():
     global keys, paddle, ball, game
