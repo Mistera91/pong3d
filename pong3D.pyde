@@ -9,6 +9,8 @@ def setup():
         scoreRight = 0
         abilityLeft = -1
         abilityRight = -1
+        abilityCountLeft = 3
+        abilityCountRight = 3
         rightTextColorBonus = 0
         leftTextColorBonus = 0
         menuCompleted = False
@@ -17,6 +19,8 @@ def setup():
         mouseClicked = False
         onPlatformRight = False
         onPlatformLeft = False
+        framesConfusionLeft = 100
+        framesConfusionRight = 100
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                  ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"        ],
@@ -72,13 +76,17 @@ def setup():
         colorBonus = 0
         size = height // 20
         # Vars
-        vx = 4
-        vy = 0
-        vz = 4
+        vx = int(random(1, 8))
+        vy = -10
+        vz = int(random(1, 8))
         x = 0
         y = 0
         z = 0
-
+        tempvx = 0
+        tempvy = 0
+        tempvz = 0
+        framesSinceFreeze = 52
+        framesSinceSlow = 300
 def isUnderground():
     global ball
     return ball.y > height
@@ -125,50 +133,102 @@ def isCollidingWithWallZ():
 
 def render():
     global ball, paddle, game
+    ball.framesSinceFreeze += 1
+    ball.framesSinceSlow += 1
     if isUnderPaddle():
         if isOverPaddles():
-            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.10): 
+            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.2): 
                 ball.vx *= 5
                 ball.vz *= 2.5
-            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.10):
+
+            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.2):
                 ball.vx *= 5
                 ball.vz *= 2.5
+
             ball.vy = ball.velocityAfterPaddleCollition
             ball.colorBonus = 200
+
         else:
             if ball.x > 0:
                 game.scoreLeft += 1
                 game.leftTextColorBonus = 200
+
             elif ball.x < 0:
                 game.scoreRight += 1
                 game.rightTextColorBonus = 200
+
             print(game.scoreLeft, game.scoreRight)
             ball.vx = int(random(1, 8))
+
             if float(random(1)) > float(0.5):
                 ball.vx *= -1
+
             ball.vy = -10
             ball.vz = int(random(1, 8))
+
             if float(random(1)) > float(0.5):
                 ball.vz *= -1
+
             ball.x = 0
             ball.y = 0
             ball.z = 0
-    if isCollidingWithWallX():
-        ball.vx = -1 * ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
-        ball.colorBonus = 200
-        ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
-    if isCollidingWithWallZ():
-        ball.vz = -1 * ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
-        ball.colorBonus = 200
-        ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
-    ball.vx *= ball.fx
-    ball.vx = max(abs(ball.vx), abs(ball.vxMin))*(ball.vx / abs(ball.vx))
-    ball.vz *= ball.fz
-    ball.vz = max(abs(ball.vz), abs(ball.vzMin))*(ball.vz / abs(ball.vz))
-    ball.x += ball.vx
-    ball.z += ball.vz
-    ball.y += ball.vy
-    ball.vy += ball.a
+
+    if ((keys.F and game.abilityLeft == 3 and game.abilityCountLeft >= 1) or (keys.INFERIOR and game.abilityRight == 3 and game.abilityCountRight >= 1)) and ball.framesSinceFreeze > 50:
+        if keys.F:
+            game.abilityCountLeft -= 1
+            keys.F = False
+
+        else:
+            game.abilityCountRight -= 1
+            keys.INFERIOR = False
+
+        ball.tempvx = ball.vx
+        ball.tempvy = ball.vy
+        ball.tempvz = ball.vz
+        ball.vx     = 0
+        ball.vy     = 0
+        ball.vz     = 0
+        ball.framesSinceFreeze = 0
+
+    if ((keys.F and game.abilityLeft == 5 and game.abilityCountLeft >= 1) or (keys.INFERIOR and game.abilityRight == 5 and game.abilityCountRight >= 1)) and ball.framesSinceSlow > 300:
+        if keys.F:
+            game.abilityCountLeft -= 1
+            keys.F = False
+        else:
+            game.abilityCountRight -= 1
+            keys.INFERIOR = False
+        ball.framesSinceSlow = 0
+
+    if ball.framesSinceFreeze > 50:
+        if ball.framesSinceFreeze == 51:
+            ball.vx = ball.tempvx
+            ball.vy = ball.tempvy
+            ball.vz = ball.tempvz
+
+        if isCollidingWithWallX():
+            ball.vx = -1 * ball.vx + ball.velocityFactorAfterWallCollition/(ball.vx)/2#ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
+            ball.colorBonus = 200
+            ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
+
+        if isCollidingWithWallZ():
+            ball.vz = -1 * ball.vz + ball.velocityFactorAfterWallCollition/(ball.vz)/2#ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
+            ball.colorBonus = 200
+            ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
+
+        ball.vx *= ball.fx
+        ball.vx = max(abs(ball.vx), abs(ball.vxMin))*(ball.vx / abs(ball.vx))
+        ball.vz *= ball.fz
+        ball.vz = max(abs(ball.vz), abs(ball.vzMin))*(ball.vz / abs(ball.vz))
+
+        if ball.framesSinceSlow < 300:
+            ball.x += ball.vx/2
+            ball.z += ball.vz/2
+            ball.y += ball.vy/2
+        else:
+            ball.x += ball.vx
+            ball.z += ball.vz
+            ball.y += ball.vy
+        ball.vy += ball.a
     noStroke()
     fill(ball.colors[0] + ball.colorBonus, ball.colors[1] +
          ball.colorBonus, ball.colors[2] + ball.colorBonus)
@@ -196,7 +256,7 @@ def render():
     # Shadow
     pushMatrix()
     translate(ball.x, height/2 + ball.size/2, ball.z)
-    fill(63, 63, 63)
+    fill(31, 31, 31)
     sphere(ball.size)
     popMatrix()
 
@@ -313,6 +373,8 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
+    game.framesConfusionLeft  += 1
+    game.framesConfusionRight += 1
     leftSizeFactor = 1
     leftSpeedFactor = 1
     if game.abilityLeft == 0:
@@ -325,6 +387,18 @@ def drawFrame():
         rightSizeFactor = 1.5
     elif game.abilityRight == 2:
         rightSpeedFactor = 1.25
+    if game.framesConfusionLeft < 100:
+        leftSpeedFactor *= -1
+    if game.framesConfusionRight < 100:
+        rightSpeedFactor *= -1
+    if (keys.F and game.abilityLeft == 4 and game.abilityCountLeft >= 1) and game.framesConfusionRight > 100:
+        keys.F = False
+        game.framesConfusionRight = 0
+        game.abilityCountLeft -= 1
+    if (keys.INFERIOR and game.abilityRight == 4 and game.abilityCountRight >= 1) and game.framesConfusionLeft > 100:
+        keys.INFERIOR = False
+        game.framesConfusionLeft = 0
+        game.abilityCountRight -= 1
     noCursor()
     game.rainbow += 1
     if game.rainbow == 256: game.rainbow = 0
