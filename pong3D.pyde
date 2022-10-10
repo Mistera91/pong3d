@@ -4,15 +4,16 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
-        againstBot           = False
+        botRight             = True
+        botLeft              = True
         setPoints            = 5
         rainbow              = 0
         scoreLeft            = 0
         scoreRight           = 0
         setsLeft             = 0
         setsRight            = 0
-        abilityLeft          = 7
-        abilityRight         = 7
+        abilityLeft          = 2
+        abilityRight         = 2
         abilityCountLeft     = 3
         abilityCountRight    = 3
         rightTextColorBonus  = 0
@@ -42,8 +43,10 @@ def setup():
 ["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
 ]
         buttonsCoords = [None for i in range(len(abilities))]
-        if againstBot:
+        if botRight and abilityRight == -1 :
             abilityRight = int(random(0, len(abilities)))
+        if botLeft and abilityLeft == -1 :
+            abilityLeft = int(random(0, len(abilities)))
 
     class keys:
         Z = False
@@ -121,7 +124,7 @@ def setup():
         predBallZ = 0
         freeze = False
 
-def botDirection():
+def botPredict():
     global game, keys, spoofBall
     spoofBall.predBallX = ball.x
     spoofBall.predBallZ = ball.z
@@ -131,11 +134,16 @@ def botDirection():
     spoofBall.x  = ball.x
     spoofBall.y  = ball.y
     spoofBall.z  = ball.z
-    print(spoofBall.vy, spoofBall.y, height/2 - ball.size/2)
+    spoofBall.velocityFactorAfterWallCollition = ball.velocityFactorAfterWallCollition
     while spoofBall.y < height/2 - ball.size/2:
-        print(spoofBall.vy, spoofBall.y)
         spoofBall.predBallX += spoofBall.vx
         spoofBall.predBallZ += spoofBall.vz
+        if spoofBall.x-spoofBall.size <= -width/2 or spoofBall.x+spoofBall.size >= width/2:
+            spoofBall.vx = -1 * spoofBall.vx + (spoofBall.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(spoofBall.vx)/2
+            spoofBall.x = constrain(spoofBall.x, -width/2 + spoofBall.size, width/2 - spoofBall.size)
+        if spoofBall.z-spoofBall.size <= -width/4 or spoofBall.z+spoofBall.size >= width/4:
+            spoofBall.vz = -1 * spoofBall.vz + (spoofBall.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(spoofBall.vz)/2
+            spoofBall.z = constrain(spoofBall.z, -width/4 + spoofBall.size, width/4 - spoofBall.size)
         spoofBall.vx *= spoofBall.fx
         spoofBall.vx = max(abs(spoofBall.vx), abs(spoofBall.vxMin * (1 + game.difficulty * 0.25)))*(spoofBall.vx / abs(spoofBall.vx))
         spoofBall.vz *= spoofBall.fz
@@ -149,32 +157,60 @@ def botDirection():
             spoofBall.z += spoofBall.vz/2
             spoofBall.y += spoofBall.vy/2
         spoofBall.vy += spoofBall.a
-    keys.LEFT_ARROW = False
-    keys.RIGHT_ARROW = False
-    keys.UP_ARROW = False
-    keys.DOWN_ARROW = False
-    if spoofBall.predBallX > paddle.rightX:
-        keys.RIGHT_ARROW = True
-    elif spoofBall.predBallX < paddle.rightX:
-        keys.LEFT_ARROW = True
-    if spoofBall.predBallZ > paddle.rightZ:
-        keys.DOWN_ARROW = True
-    elif spoofBall.predBallZ < paddle.rightZ:
-        keys.UP_ARROW = True
+    
+def botMove():
+    if game.botRight:    
+        keys.LEFT_ARROW = False
+        keys.RIGHT_ARROW = False
+        keys.UP_ARROW = False
+        keys.DOWN_ARROW = False
+        if spoofBall.predBallX > paddle.rightX + paddle.sideLen/16:
+            keys.RIGHT_ARROW = True
+        elif spoofBall.predBallX < paddle.rightX - paddle.sideLen/16:
+            keys.LEFT_ARROW = True
+        if spoofBall.predBallZ > paddle.rightZ + paddle.sideLen/16:
+            keys.DOWN_ARROW = True
+        elif spoofBall.predBallZ < paddle.rightZ - paddle.sideLen/16:
+            keys.UP_ARROW = True
+    if game.botLeft:
+        keys.Q = False
+        keys.D = False
+        keys.Z = False
+        keys.S = False
+        if spoofBall.predBallX > paddle.leftX + paddle.sideLen/16:
+            keys.D = True
+        elif spoofBall.predBallX < paddle.leftX - paddle.sideLen/16:
+            keys.Q = True
+        if spoofBall.predBallZ > paddle.leftZ + paddle.sideLen/16:
+            keys.S = True
+        elif spoofBall.predBallZ < paddle.leftZ - paddle.sideLen/16:
+            keys.Z = True
 
 def drawBall():
     global ball, paddle, game
     ball.framesSinceFreeze += 1
     ball.framesSinceSlow += 1
+    if ball.framesSinceSlow == 300:
+            ball.velocityFactorAfterWallCollition *= 2
+            ball.vx *= 2
+            ball.vz *= 2
+            ball.vy *= 2
+            botPredict()
+    if ball.framesSinceSlow == 0:
+            ball.velocityFactorAfterWallCollition /= 2
+            ball.vx /= 2
+            ball.vz /= 2
+            ball.vy /= 2
+            botPredict()
     if isUnderPaddle():
         if isOverPaddles():
-            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.2): 
+            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(1.2): 
                 ball.vx *= 5
                 ball.vz *= 2.5
                 game.announcedText       = "The ball got boosted by blue !"
                 game.announcedTextFrames = 300
 
-            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.2):
+            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(1.2):
                 ball.vx *= 5
                 ball.vz *= 2.5
                 game.announcedText       = "The ball got boosted by red !"
@@ -182,7 +218,7 @@ def drawBall():
 
             ball.vy = ball.velocityAfterPaddleCollition * (1 + game.difficulty * 0.05)
             ball.colorBonus = 200
-            botDirection()
+            botPredict()
 
         else:
             if ball.x > 0:
@@ -204,8 +240,8 @@ def drawBall():
 
             if float(random(1)) > float(0.5):
                 ball.vz *= -1
-            #game.difficulty = 0
-            #game.framesToDifficulty = 0
+            game.difficulty = 0
+            game.framesToDifficulty = 0
             ball.x = 0
             ball.y = 0
             ball.z = 0
@@ -237,6 +273,8 @@ def drawBall():
         ball.framesSinceSlow = 0
 
     if ball.framesSinceFreeze > 50 and game.framesToRestart > 90:
+        if game.framesToRestart == 91:
+            botPredict()
         if ball.framesSinceFreeze == 51:
             ball.vx = ball.tempvx
             ball.vy = ball.tempvy
@@ -256,15 +294,9 @@ def drawBall():
         ball.vx = max(abs(ball.vx), abs(ball.vxMin * (1 + game.difficulty * 0.25)))*(ball.vx / abs(ball.vx))
         ball.vz *= ball.fz
         ball.vz = max(abs(ball.vz), abs(ball.vzMin * (1 + game.difficulty * 0.25)))*(ball.vz / abs(ball.vz))
-
-        if ball.framesSinceSlow < 300:
-            ball.x += ball.vx/2
-            ball.z += ball.vz/2
-            ball.y += ball.vy/2
-        else:
-            ball.x += ball.vx
-            ball.z += ball.vz
-            ball.y += ball.vy
+        ball.x += ball.vx
+        ball.z += ball.vz
+        ball.y += ball.vy
         ball.vy += ball.a
     noStroke()
     fill(ball.colors[0] + ball.colorBonus, ball.colors[1] +
@@ -276,8 +308,8 @@ def drawBall():
     popMatrix()
     pushMatrix()
     fill(255)
-    translate(spoofBall.predBallX, height/2 - paddle.sideLen / 16 - ball.size/2, spoofBall.predBallZ)
-    sphere(ball.size/2)
+    translate(spoofBall.predBallX, height/2, spoofBall.predBallZ)
+    sphere(spoofBall.size)
     popMatrix()
     # Blue text
     pushMatrix()
@@ -310,7 +342,7 @@ def drawBall():
     pushMatrix()
     translate(ball.x, height/2 + ball.size/2, ball.z)
     fill(31, 31, 31)
-    sphere(ball.size)
+    sphere(ball.size/3)
     popMatrix()
 
 def drawMenu():
@@ -322,11 +354,11 @@ def drawMenu():
     hoveredAbility       = False
     game.menuCompleted = game.abilityLeft >= 0 and game.abilityRight >= 0
     if game.drawMenuNextCall:
-        game.drawMenuNextCall = True
+        game.drawMenuNextCall = False
         if not game.abilityLeft >= 0:
-            image(loadImage("stars_blue.png"), 0, 0, width, height)
+            background(loadImage("stars_blue.png"))#, 0, 0, width, height)
         else:
-            image(loadImage("stars_red.png"), 0, 0, width, height)
+            background(loadImage("stars_red.png"))#, 0, 0, width, height)
         for ability in range(len(game.abilities)):
             if ability == 0:
                 image(loadImage(game.abilities[ability][1]), (ability + 1) * buttonWidth, height/3, buttonWidth, buttonWidth)
@@ -362,8 +394,9 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
-    #botDirection()
-    if game.againstBot:
+    botPredict()
+    botMove()
+    if game.botRight  :
         if random(1) < 0.001:
             keys.INFERIOR = True
     game.framesToDifficulty   += 1
@@ -371,6 +404,7 @@ def drawFrame():
         game.difficulty         += 1
         game.announcedText       = "Difficulty increased !"
         game.announcedTextFrames = 255
+        botPredict()
     game.announcedTextFrames  -= 1
     game.framesConfusionLeft  += 1
     game.framesConfusionRight += 1
@@ -395,30 +429,30 @@ def drawFrame():
         leftSpeedFactor *= -1
     if game.framesConfusionRight < 100:
         rightSpeedFactor *= -1
-    if (keys.F and game.abilityLeft == 4 and game.abilityCountLeft >= 1) and game.framesConfusionRight > 100:
-        keys.F = False
-        game.announcedText       = "Red got confused !"
-        game.announcedTextFrames = 300
+    if (keys.F and game.abilityLeft == 4 and game.abilityCountLeft >= 1) and game.framesConfusionRight > 100 and not game.botRight:
+        keys.F                    = False
+        game.announcedText        = "Red got confused !"
+        game.announcedTextFrames  = 300
         game.framesConfusionRight = 0
-        game.abilityCountLeft -= 1
-    if (keys.INFERIOR and game.abilityRight == 4 and game.abilityCountRight >= 1) and game.framesConfusionLeft > 100:
+        game.abilityCountLeft    -= 1
+    if (keys.INFERIOR and game.abilityRight == 4 and game.abilityCountRight >= 1) and game.framesConfusionLeft > 100 and not game.botLeft:
         keys.INFERIOR = False
         game.announcedText       = "Blue got confused !"
         game.announcedTextFrames = 300
         game.framesConfusionLeft = 0
-        game.abilityCountRight -= 1
+        game.abilityCountRight  -= 1
     if (keys.F and game.abilityLeft == 6 and game.abilityCountLeft >= 1) and game.framesDarknessRight > 300 and game.framesDarknessLeft > 300:
         keys.F = False
         game.announcedText       = "Lights off for red !"
         game.announcedTextFrames = 300
         game.framesDarknessRight = 0
-        game.abilityCountLeft -= 1
+        game.abilityCountLeft   -= 1
     if (keys.INFERIOR and game.abilityRight == 6 and game.abilityCountRight >= 1) and game.framesDarknessRight > 300 and game.framesDarknessRight > 300:
         keys.INFERIOR = False
         game.announcedText       = "Lights off for blue !"
         game.announcedTextFrames = 300
-        game.framesDarknessLeft = 0
-        game.abilityCountRight -= 1
+        game.framesDarknessLeft  = 0
+        game.abilityCountRight  -= 1
     noCursor()
     game.rainbow += 1
     if game.rainbow == 256: game.rainbow = 0
