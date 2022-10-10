@@ -1,25 +1,24 @@
 def setup():
-    global keys, paddle, ball, game
+    global keys, paddle, ball, game, spoofBall
     fullScreen()
-    size(1200, 900, P3D)
+    size(1000, 500, P3D)
 
     class game:
-        againstBot           = True
+        againstBot           = False
         setPoints            = 5
         rainbow              = 0
         scoreLeft            = 0
         scoreRight           = 0
         setsLeft             = 0
         setsRight            = 0
-        abilityLeft          = -1
-        abilityRight         = -1
+        abilityLeft          = 7
+        abilityRight         = 7
         abilityCountLeft     = 3
         abilityCountRight    = 3
         rightTextColorBonus  = 0
         leftTextColorBonus   = 0
         menuCompleted        = False
         drawMenuNextCall     = True
-        stopDrawMenu         = True
         mouseClicked         = False
         onPlatformRight      = False
         onPlatformLeft       = False
@@ -102,65 +101,65 @@ def setup():
         framesSinceFreeze = 52
         framesSinceSlow = 300
 
-def isUnderground():
-    global ball
-    return ball.y > height
-
-def isUnderPaddle():
-    global ball
-    return ball.y >= height/2 - paddle.sideLen / 16 - ball.size/2
-
-def isOverPaddles():
-    global ball, paddle
-    game.onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
-        ball.size < paddle.leftX + (paddle.sideLen * leftSizeFactor)/2 and \
-        ball.z+ball.size > paddle.leftZ - (paddle.sideLen * leftSizeFactor)/2 and ball.z - \
-        ball.size < paddle.leftZ + (paddle.sideLen * leftSizeFactor)/2
-    game.onPlatformRight = ball.x+ball.size > paddle.rightX - (paddle.sideLen * rightSizeFactor)/2 and ball.x - \
-        ball.size < paddle.rightX + (paddle.sideLen * rightSizeFactor)/2 and \
-        ball.z+ball.size > paddle.rightZ - (paddle.sideLen * rightSizeFactor)/2 and ball.z - \
-        ball.size < paddle.rightZ + (paddle.sideLen * rightSizeFactor)/2
-    return game.onPlatformLeft or game.onPlatformRight
-
-def isStrictlyOverPaddles():
-    global ball, paddle
-    game.onPlatformLeft = ball.x-ball.size > paddle.leftX - paddle.sideLen/2 and ball.x + \
-        ball.size < paddle.leftX + paddle.sideLen/2 and \
-        ball.z-ball.size > paddle.leftZ - paddle.sideLen/2 and ball.z + \
-        ball.size < paddle.leftZ + paddle.sideLen/2
-    game.onPlatformRight = ball.x-ball.size > paddle.rightX - paddle.sideLen/2 and ball.x + \
-        ball.size < paddle.rightX + paddle.sideLen/2 and \
-        ball.z-ball.size > paddle.rightZ - paddle.sideLen/2 and ball.z + \
-        ball.size < paddle.rightZ + paddle.sideLen/2
-    return game.onPlatformLeft or game.onPlatformRight
-
-def isCollidingWithWallX():
-    global ball
-    onWallNegX = ball.x-ball.size <= -width/2  # X
-    onWallPosX = ball.x+ball.size >= width/2
-    return onWallNegX or onWallPosX
-
-def isCollidingWithWallZ():
-    global ball
-    onWallNegZ = ball.z-ball.size <= -width/4  # Z
-    onWallPosZ = ball.z+ball.size >= width/4
-    return onWallNegZ or onWallPosZ
+    class spoofBall:
+        a = ball.a
+        velocityAfterPaddleCollition = ball.velocityAfterPaddleCollition
+        velocityFactorAfterWallCollition = ball.velocityFactorAfterWallCollition
+        fx = ball.fx
+        vxMin = ball.vxMin
+        fz = ball.fz
+        vzMin = ball.vzMin
+        size = ball.size
+        # Vars
+        vx = 0
+        vy = 0
+        vz = 0
+        x = 0
+        y = 0
+        z = 0
+        predBallX = 0
+        predBallZ = 0
+        freeze = False
 
 def botDirection():
-    global game, keys
-    predBallX = ball.x + ball.vx * (10 - game.difficulty)
-    predBallZ = ball.z + ball.vz * (10 - game.difficulty)
+    global game, keys, spoofBall
+    spoofBall.predBallX = ball.x
+    spoofBall.predBallZ = ball.z
+    spoofBall.vx = ball.vx
+    spoofBall.vy = ball.vy
+    spoofBall.vz = ball.vz
+    spoofBall.x  = ball.x
+    spoofBall.y  = ball.y
+    spoofBall.z  = ball.z
+    print(spoofBall.vy, spoofBall.y, height/2 - ball.size/2)
+    while spoofBall.y < height/2 - ball.size/2:
+        print(spoofBall.vy, spoofBall.y)
+        spoofBall.predBallX += spoofBall.vx
+        spoofBall.predBallZ += spoofBall.vz
+        spoofBall.vx *= spoofBall.fx
+        spoofBall.vx = max(abs(spoofBall.vx), abs(spoofBall.vxMin * (1 + game.difficulty * 0.25)))*(spoofBall.vx / abs(spoofBall.vx))
+        spoofBall.vz *= spoofBall.fz
+        spoofBall.vz = max(abs(spoofBall.vz), abs(spoofBall.vzMin * (1 + game.difficulty * 0.25)))*(spoofBall.vz / abs(spoofBall.vz))
+        if not spoofBall.freeze:
+            spoofBall.x += spoofBall.vx
+            spoofBall.z += spoofBall.vz
+            spoofBall.y += spoofBall.vy
+        else: 
+            spoofBall.x += spoofBall.vx/2
+            spoofBall.z += spoofBall.vz/2
+            spoofBall.y += spoofBall.vy/2
+        spoofBall.vy += spoofBall.a
     keys.LEFT_ARROW = False
     keys.RIGHT_ARROW = False
     keys.UP_ARROW = False
     keys.DOWN_ARROW = False
-    if predBallX > paddle.rightX:
+    if spoofBall.predBallX > paddle.rightX:
         keys.RIGHT_ARROW = True
-    elif predBallX < paddle.rightX:
+    elif spoofBall.predBallX < paddle.rightX:
         keys.LEFT_ARROW = True
-    if predBallZ > paddle.rightZ:
+    if spoofBall.predBallZ > paddle.rightZ:
         keys.DOWN_ARROW = True
-    elif predBallZ < paddle.rightZ:
+    elif spoofBall.predBallZ < paddle.rightZ:
         keys.UP_ARROW = True
 
 def drawBall():
@@ -183,6 +182,7 @@ def drawBall():
 
             ball.vy = ball.velocityAfterPaddleCollition * (1 + game.difficulty * 0.05)
             ball.colorBonus = 200
+            botDirection()
 
         else:
             if ball.x > 0:
@@ -276,7 +276,7 @@ def drawBall():
     popMatrix()
     pushMatrix()
     fill(255)
-    translate(ball.x + (10 - game.difficulty)*ball.vx, ball.y, ball.z + (10 - game.difficulty)*ball.vz)
+    translate(spoofBall.predBallX, height/2 - paddle.sideLen / 16 - ball.size/2, spoofBall.predBallZ)
     sphere(ball.size/2)
     popMatrix()
     # Blue text
@@ -313,56 +313,6 @@ def drawBall():
     sphere(ball.size)
     popMatrix()
 
-def keyPressed():
-    global keys
-    if keyCode == 60:
-        keys.INFERIOR = True
-    if keyCode == 70:
-        keys.F = True
-    if keyCode == 90:
-        keys.Z = True
-    if keyCode == 81:
-        keys.Q = True
-    if keyCode == 83:
-        keys.S = True
-    if keyCode == 68:
-        keys.D = True
-    if keyCode == 38:
-        keys.UP_ARROW = True
-    if keyCode == 37:
-        keys.LEFT_ARROW = True
-    if keyCode == 40:
-        keys.DOWN_ARROW = True
-    if keyCode == 39:
-        keys.RIGHT_ARROW = True
-
-def keyReleased():
-    global keys
-    if keyCode == 60:
-        keys.INFERIOR = False
-    if keyCode == 70:
-        keys.F = False
-    if keyCode == 90:
-        keys.Z = False
-    if keyCode == 81:
-        keys.Q = False
-    if keyCode == 83:
-        keys.S = False
-    if keyCode == 68:
-        keys.D = False
-    if keyCode == 38:
-        keys.UP_ARROW = False
-    if keyCode == 37:
-        keys.LEFT_ARROW = False
-    if keyCode == 40:
-        keys.DOWN_ARROW = False
-    if keyCode == 39:
-        keys.RIGHT_ARROW = False
-
-def mouseClicked():
-    global game
-    game.mouseClicked = True
-
 def drawMenu():
     global game
     noStroke()
@@ -371,24 +321,12 @@ def drawMenu():
     hoveredAbilityNumber = 0
     hoveredAbility       = False
     game.menuCompleted = game.abilityLeft >= 0 and game.abilityRight >= 0
-    if game.abilityLeft >= 0 and game.stopDrawMenu:
-        game.drawMenuNextCall = True
-        game.stopDrawMenu = False
     if game.drawMenuNextCall:
-        game.drawMenuNextCall = False
-        background(0)
-        image(loadImage("stars.png"), 0, 0, width, height)
-        fill(0, 0, 0, 127)
-        rect(0,0, width, height)
-        textAlign(CENTER, CENTER)
-        textSize(width/15)
+        game.drawMenuNextCall = True
         if not game.abilityLeft >= 0:
-            fill(127, 127, 255)
-            text("Blue, choose your ability", 0, 0, width, height/4)
+            image(loadImage("stars_blue.png"), 0, 0, width, height)
         else:
-            fill(255, 127, 127)
-            text("Red, choose your ability", 0, 0, width, height/4)
-        fill(255)
+            image(loadImage("stars_red.png"), 0, 0, width, height)
         for ability in range(len(game.abilities)):
             if ability == 0:
                 image(loadImage(game.abilities[ability][1]), (ability + 1) * buttonWidth, height/3, buttonWidth, buttonWidth)
@@ -396,8 +334,6 @@ def drawMenu():
             else:
                 image(loadImage(game.abilities[ability][1]), (ability + 1) * buttonWidth + ability * spaceWidth, height/3, buttonWidth, buttonWidth)
                 game.buttonsCoords[ability] = [(ability + 1) * buttonWidth + ability * spaceWidth, (ability + 1) * buttonWidth + ability * spaceWidth + buttonWidth]        
-        fill(0)
-        rect(width/8 - width/16, height/2 + height/16, width - width/4 + width/8, height/2 - height/8, width/32)
     for coords in range(len(game.buttonsCoords)):
         if mouseY > height/3 and mouseY < height/3 + buttonWidth:
             if mouseX > game.buttonsCoords[coords][0] and mouseX < game.buttonsCoords[coords][1]:
@@ -408,13 +344,13 @@ def drawMenu():
     if hoveredAbility:
         cursor(HAND)
         fill(0)
-        rect(width/8 - width/16, height/2 + height/16, width - width/4 + width/8, height/2 - height/8, width/32)
+        rect(width/5, 2 * height/3, width - 2 * width/5, height/3 - height/10)
         fill(255)
         textAlign(CENTER, CENTER)
-        textSize(width/25)
-        text(game.abilities[hoveredAbilityNumber][0], width/8, height/2, width - width/4, height/3)
-        textSize(width/40)
-        text(game.abilities[hoveredAbilityNumber][2], width/8, height - height/4, width - width/4, height/4 - height/16)
+        textSize(width/30)
+        text(game.abilities[hoveredAbilityNumber][0], width/5, 2 * height/3, width - 2 * width/5, height/3 - height/4)
+        textSize(width/50)
+        text(game.abilities[hoveredAbilityNumber][2], width/5, 2 * height/3 + height/20, width - 2 * width/5, height/3 - height/10)
     else: 
         cursor(ARROW)
     if game.mouseClicked:
@@ -426,7 +362,7 @@ def drawMenu():
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
-    botDirection()
+    #botDirection()
     if game.againstBot:
         if random(1) < 0.001:
             keys.INFERIOR = True
@@ -630,3 +566,97 @@ def draw():
     if game.menuCompleted:
         drawFrame()
     else: drawMenu()
+
+def keyPressed():
+    global keys
+    if keyCode == 60:
+        keys.INFERIOR = True
+    if keyCode == 70:
+        keys.F = True
+    if keyCode == 90:
+        keys.Z = True
+    if keyCode == 81:
+        keys.Q = True
+    if keyCode == 83:
+        keys.S = True
+    if keyCode == 68:
+        keys.D = True
+    if keyCode == 38:
+        keys.UP_ARROW = True
+    if keyCode == 37:
+        keys.LEFT_ARROW = True
+    if keyCode == 40:
+        keys.DOWN_ARROW = True
+    if keyCode == 39:
+        keys.RIGHT_ARROW = True
+
+def keyReleased():
+    global keys
+    if keyCode == 60:
+        keys.INFERIOR = False
+    if keyCode == 70:
+        keys.F = False
+    if keyCode == 90:
+        keys.Z = False
+    if keyCode == 81:
+        keys.Q = False
+    if keyCode == 83:
+        keys.S = False
+    if keyCode == 68:
+        keys.D = False
+    if keyCode == 38:
+        keys.UP_ARROW = False
+    if keyCode == 37:
+        keys.LEFT_ARROW = False
+    if keyCode == 40:
+        keys.DOWN_ARROW = False
+    if keyCode == 39:
+        keys.RIGHT_ARROW = False
+
+def mouseClicked():
+    global game
+    game.mouseClicked = True
+
+def isUnderground():
+    global ball
+    return ball.y > height
+
+def isUnderPaddle():
+    global ball
+    return ball.y >= height/2 - paddle.sideLen / 16 - ball.size/2
+
+def isOverPaddles():
+    global ball, paddle
+    game.onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
+        ball.size < paddle.leftX + (paddle.sideLen * leftSizeFactor)/2 and \
+        ball.z+ball.size > paddle.leftZ - (paddle.sideLen * leftSizeFactor)/2 and ball.z - \
+        ball.size < paddle.leftZ + (paddle.sideLen * leftSizeFactor)/2
+    game.onPlatformRight = ball.x+ball.size > paddle.rightX - (paddle.sideLen * rightSizeFactor)/2 and ball.x - \
+        ball.size < paddle.rightX + (paddle.sideLen * rightSizeFactor)/2 and \
+        ball.z+ball.size > paddle.rightZ - (paddle.sideLen * rightSizeFactor)/2 and ball.z - \
+        ball.size < paddle.rightZ + (paddle.sideLen * rightSizeFactor)/2
+    return game.onPlatformLeft or game.onPlatformRight
+
+def isStrictlyOverPaddles():
+    global ball, paddle
+    game.onPlatformLeft = ball.x-ball.size > paddle.leftX - paddle.sideLen/2 and ball.x + \
+        ball.size < paddle.leftX + paddle.sideLen/2 and \
+        ball.z-ball.size > paddle.leftZ - paddle.sideLen/2 and ball.z + \
+        ball.size < paddle.leftZ + paddle.sideLen/2
+    game.onPlatformRight = ball.x-ball.size > paddle.rightX - paddle.sideLen/2 and ball.x + \
+        ball.size < paddle.rightX + paddle.sideLen/2 and \
+        ball.z-ball.size > paddle.rightZ - paddle.sideLen/2 and ball.z + \
+        ball.size < paddle.rightZ + paddle.sideLen/2
+    return game.onPlatformLeft or game.onPlatformRight
+
+def isCollidingWithWallX():
+    global ball
+    onWallNegX = ball.x-ball.size <= -width/2  # X
+    onWallPosX = ball.x+ball.size >= width/2
+    return onWallNegX or onWallPosX
+
+def isCollidingWithWallZ():
+    global ball
+    onWallNegZ = ball.z-ball.size <= -width/4  # Z
+    onWallPosZ = ball.z+ball.size >= width/4
+    return onWallNegZ or onWallPosZ
