@@ -157,6 +157,7 @@ def botPredict():
             spoofBall.z += spoofBall.vz/2
             spoofBall.y += spoofBall.vy/2
         spoofBall.vy += spoofBall.a
+    print(spoofBall.vx, spoofBall.predBallX, spoofBall.vz, spoofBall.predBallZ)
     
 def botMove():
     if game.botRight:    
@@ -216,8 +217,8 @@ def drawBall():
                 game.announcedText       = "The ball got boosted by red !"
                 game.announcedTextFrames = 300
 
-            ball.vy = ball.velocityAfterPaddleCollition * (1 + game.difficulty * 0.05)
-            ball.colorBonus = 200
+            ball.vy = ball.velocityAfterPaddleCollition #* (1 + game.difficulty * 0.05)
+            ball.colorBonus = 135
             botPredict()
 
         else:
@@ -282,12 +283,12 @@ def drawBall():
 
         if isCollidingWithWallX():
             ball.vx = -1 * ball.vx + (ball.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(ball.vx)/2#ball.velocityFactorAfterWallCollition * (ball.vx / abs(ball.vx))
-            ball.colorBonus = 200
+            ball.colorBonus = 135
             ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
 
         if isCollidingWithWallZ():
             ball.vz = -1 * ball.vz + (ball.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(ball.vz)/2#ball.velocityFactorAfterWallCollition * (ball.vz / abs(ball.vz))
-            ball.colorBonus = 200
+            ball.colorBonus = 135
             ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
 
         ball.vx *= ball.fx
@@ -299,8 +300,9 @@ def drawBall():
         ball.y += ball.vy
         ball.vy += ball.a
     noStroke()
-    fill(ball.colors[0] + ball.colorBonus, ball.colors[1] +
-         ball.colorBonus, ball.colors[2] + ball.colorBonus)
+    fill(ball.colors[0] + ball.colorBonus,
+         ball.colors[1] + ball.colorBonus * ((255 - ball.colors[1]) / 135),
+         ball.colors[2] + ball.colorBonus * ((255 - ball.colors[2]) / 135))
     # Sphere
     pushMatrix()
     translate(ball.x, ball.y, ball.z)
