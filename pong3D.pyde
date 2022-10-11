@@ -4,34 +4,35 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
-        botRight             = True
-        botLeft              = True
-        setPoints            = 5
-        rainbow              = 0
-        scoreLeft            = 0
-        scoreRight           = 0
-        setsLeft             = 0
-        setsRight            = 0
-        abilityLeft          = 2
-        abilityRight         = 2
-        abilityCountLeft     = 3
-        abilityCountRight    = 3
-        rightTextColorBonus  = 0
-        leftTextColorBonus   = 0
-        menuCompleted        = False
-        drawMenuNextCall     = True
-        mouseClicked         = False
-        onPlatformRight      = False
-        onPlatformLeft       = False
-        framesConfusionLeft  = 100
-        framesConfusionRight = 100
-        framesDarknessLeft   = 300
-        framesDarknessRight  = 300
-        framesToRestart      = 0
-        framesToDifficulty   = 0
-        announcedText        = ""
-        announcedTextFrames  = 0
-        difficulty           = 0
+        showPredictedLocation = True
+        botRight              = False
+        botLeft               = False
+        setPoints             = 5
+        rainbow               = 0
+        scoreLeft             = 0
+        scoreRight            = 0
+        setsLeft              = 0
+        setsRight             = 0
+        abilityLeft           = -1
+        abilityRight          = -1
+        abilityCountLeft      = 3
+        abilityCountRight     = 3
+        rightTextColorBonus   = 0
+        leftTextColorBonus    = 0
+        menuCompleted         = False
+        drawMenuNextCall      = True
+        mouseClicked          = False
+        onPlatformRight       = False
+        onPlatformLeft        = False
+        framesConfusionLeft   = 100
+        framesConfusionRight  = 100
+        framesDarknessLeft    = 300
+        framesDarknessRight   = 300
+        framesToRestart       = 0
+        framesToDifficulty    = 0
+        announcedText         = ""
+        announcedTextFrames   = 0
+        difficulty            = 0
         abilities = [
 ["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                   ],
 ["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"         ],
@@ -205,13 +206,13 @@ def drawBall():
             botPredict()
     if isUnderPaddle():
         if isOverPaddles():
-            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(1.2): 
+            if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.2): 
                 ball.vx *= 5
                 ball.vz *= 2.5
                 game.announcedText       = "The ball got boosted by blue !"
                 game.announcedTextFrames = 300
 
-            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(1.2):
+            if game.onPlatformRight and game.abilityRight == 1 and float(random(1)) < float(0.2):
                 ball.vx *= 5
                 ball.vz *= 2.5
                 game.announcedText       = "The ball got boosted by red !"
@@ -308,11 +309,13 @@ def drawBall():
     translate(ball.x, ball.y, ball.z)
     sphere(ball.size)
     popMatrix()
-    pushMatrix()
-    fill(255)
-    translate(spoofBall.predBallX, height/2, spoofBall.predBallZ)
-    sphere(spoofBall.size)
-    popMatrix()
+    # Predicted location
+    if game.showPredictedLocation:
+        pushMatrix()
+        fill(255)
+        translate(spoofBall.predBallX, height/2, spoofBall.predBallZ)
+        sphere(spoofBall.size)
+        popMatrix()
     # Blue text
     pushMatrix()
     translate(-width/2 + width/16, -height/2 + height/8, width/4)
