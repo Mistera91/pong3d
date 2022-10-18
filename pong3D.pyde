@@ -4,7 +4,8 @@ def setup():
     size(1000, 500, P3D)
 
     class game:
-        showPredictedLocation = True
+        showShadow            = True
+        showPredictedLocation = False
         botRight              = False
         botLeft               = False
         setPoints             = 5
@@ -158,7 +159,6 @@ def botPredict():
             spoofBall.z += spoofBall.vz/2
             spoofBall.y += spoofBall.vy/2
         spoofBall.vy += spoofBall.a
-    print(spoofBall.vx, spoofBall.predBallX, spoofBall.vz, spoofBall.predBallZ)
     
 def botMove():
     if game.botRight:    
@@ -231,7 +231,6 @@ def drawBall():
                 game.scoreRight += 1
                 game.rightTextColorBonus = 200
             game.framesToRestart = 0
-            print(game.scoreLeft, game.scoreRight)
             ball.vx = int(random(1, 8))
 
             if float(random(1)) > float(0.5):
@@ -344,11 +343,12 @@ def drawBall():
     text(game.announcedText, 0, 0)
     popMatrix()
     # Shadow
-    pushMatrix()
-    translate(ball.x, height/2 + ball.size/2, ball.z)
-    fill(31, 31, 31)
-    sphere(ball.size/3)
-    popMatrix()
+    if game.showShadow:
+        pushMatrix()
+        translate(ball.x, height/2 + ball.size/2, ball.z)
+        fill(0, 0, 0)
+        sphere(ball.size)
+        popMatrix()
 
 def drawMenu():
     global game
@@ -393,13 +393,15 @@ def drawMenu():
     if game.mouseClicked:
         game.mouseClicked = False
         if not game.abilityLeft >= 0:
+            game.drawMenuNextCall = True
             game.abilityLeft = hoveredAbilityNumber
         else: 
             game.abilityRight = hoveredAbilityNumber
 
 def drawFrame():
     global leftSizeFactor, rightSizeFactor
-    botPredict()
+    if game.botLeft or game.botRight or game.showPredictedLocation:
+        botPredict()
     botMove()
     if game.botRight  :
         if random(1) < 0.001:
@@ -474,7 +476,7 @@ def drawFrame():
         spotLight(255, 255, 255, width/2, 0, 0, 1, 1, -0.5, TAU/4, 0.75)
 
     else:
-        spotLight(255, 255, 255, width/2, 0, width/4, 0, 1, -0.5, TAU, 0)
+        spotLight(255, 255, 255, width/2, height/5, width/4, 0, 1, -0.5, TAU, 0)
 
     translate(width/2, height/2, -width/4)
     pushMatrix()
@@ -522,13 +524,31 @@ def drawFrame():
     stroke(127, 0, 255)
     noFill()
     box(width, height, width/2)
+    # Drawing the middle line
     pushMatrix()
     translate(0, height/4 + height/4, 0)
     box(0, 0, width/2)
     popMatrix()
+    # Drawing fixed assets
     pushMatrix()
     translate(0, height/2, 0)
     fill("#1C1C2C")
+    box(width, 0, width/2)
+    popMatrix()
+    pushMatrix()
+    translate(0, 0, -width/4)
+    box(width, height, 0)
+    popMatrix()
+    pushMatrix()
+    translate(-width/2, 0, 0)
+    box(0, height, width/2)
+    popMatrix()
+    pushMatrix()
+    translate(width/2, 0, 0)
+    box(0, height, width/2)
+    popMatrix()
+    pushMatrix()
+    translate(0, -height/2, 0)
     box(width, 0, width/2)
     popMatrix()
     if game.abilityLeft == 7: colorMode(HSB); fill(game.rainbow, 255, 127); stroke(game.rainbow, 255, 255)
