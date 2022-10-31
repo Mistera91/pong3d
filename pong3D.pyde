@@ -1,13 +1,14 @@
 def setup():
     global keys, paddle, ball, game, spoofBall
-    fullScreen()
-    size(1000, 500, P3D)
+    fullScreen(P3D)
 
     class game:
         showShadow            = True
-        showPredictedLocation = False
-        botRight              = False
-        botLeft               = False
+        showPredictedLocation = True
+        botRight              = True
+        botLeft               = True
+        autoBall              = False
+        ballControlPower      = 5
         setPoints             = 5
         rainbow               = 0
         scoreLeft             = 0
@@ -49,6 +50,9 @@ def setup():
             abilityRight = int(random(0, len(abilities)))
         if botLeft and abilityLeft == -1 :
             abilityLeft = int(random(0, len(abilities)))
+        # Converting ballControlPower into values that the program will actually use (not human friendly values)
+        slowBallControlPower      = 1 - ballControlPower / float(100)
+        fastBallControlPower      = 1 + ballControlPower / float(100)
 
     class keys:
         Z = False
@@ -61,6 +65,11 @@ def setup():
         DOWN_ARROW = False
         LEFT_ARROW = False
         INFERIOR = False
+        I = False
+        J = False
+        K = False
+        L = False
+        H = False
 
     class paddle:
         sideLen = height // 4
@@ -95,8 +104,10 @@ def setup():
         size = height // 20
         # Vars
         vx = int(random(1, 8))
+        vxBonus = 0
         vy = -10
         vz = int(random(1, 8))
+        vzBonus = 0
         x = 0
         y = 0
         z = 0
@@ -127,7 +138,6 @@ def setup():
         freeze = False
 
 def botPredict():
-    global game, keys, spoofBall
     spoofBall.predBallX = ball.x
     spoofBall.predBallZ = ball.z
     spoofBall.vx = ball.vx
@@ -137,7 +147,7 @@ def botPredict():
     spoofBall.y  = ball.y
     spoofBall.z  = ball.z
     spoofBall.velocityFactorAfterWallCollition = ball.velocityFactorAfterWallCollition
-    while spoofBall.y < height/2 - ball.size/2:
+    while spoofBall.y < height/2 - ball.size/2 - spoofBall.vy:
         spoofBall.predBallX += spoofBall.vx
         spoofBall.predBallZ += spoofBall.vz
         if spoofBall.x-spoofBall.size <= -width/2 or spoofBall.x+spoofBall.size >= width/2:
@@ -146,20 +156,57 @@ def botPredict():
         if spoofBall.z-spoofBall.size <= -width/4 or spoofBall.z+spoofBall.size >= width/4:
             spoofBall.vz = -1 * spoofBall.vz + (spoofBall.velocityFactorAfterWallCollition * (1 + game.difficulty * 0.25))/(spoofBall.vz)/2
             spoofBall.z = constrain(spoofBall.z, -width/4 + spoofBall.size, width/4 - spoofBall.size)
-        spoofBall.vx *= spoofBall.fx
-        spoofBall.vx = max(abs(spoofBall.vx), abs(spoofBall.vxMin * (1 + game.difficulty * 0.25)))*(spoofBall.vx / abs(spoofBall.vx))
-        spoofBall.vz *= spoofBall.fz
-        spoofBall.vz = max(abs(spoofBall.vz), abs(spoofBall.vzMin * (1 + game.difficulty * 0.25)))*(spoofBall.vz / abs(spoofBall.vz))
+        try:
+            spoofBall.vx *= spoofBall.fx
+            spoofBall.vx = max(abs(spoofBall.vx), abs(spoofBall.vxMin * (1 + game.difficulty * 0.25)))*(spoofBall.vx / abs(spoofBall.vx))
+            spoofBall.vz *= spoofBall.fz
+            spoofBall.vz = max(abs(spoofBall.vz), abs(spoofBall.vzMin * (1 + game.difficulty * 0.25)))*(spoofBall.vz / abs(spoofBall.vz))
+        except ZeroDivisionError: pass
         if not spoofBall.freeze:
-            spoofBall.x += spoofBall.vx
-            spoofBall.z += spoofBall.vz
+            spoofBall.x += spoofBall.vx + ball.vxBonus
+            spoofBall.z += spoofBall.vz + ball.vzBonus
             spoofBall.y += spoofBall.vy
         else: 
-            spoofBall.x += spoofBall.vx/2
-            spoofBall.z += spoofBall.vz/2
-            spoofBall.y += spoofBall.vy/2
+            spoofBall.x += spoofBall.vx/2 + ball.vxBonus
+            spoofBall.z += spoofBall.vz/2 + ball.vzBonus
+            spoofBall.y += spoofBall.vy/2 
         spoofBall.vy += spoofBall.a
+    spoofBall.predBallX = spoofBall.x
+    spoofBall.predBallZ = spoofBall.z
     
+def playBall():
+    movX, movXneg, movZ, movZneg = False, False, False, False
+    ball.vxBonus = 0
+    ball.vzBonus = 0
+    if keys.I and not keys.K:
+        movZneg = True
+    if keys.K and not keys.I:
+        movZ    = True
+    if keys.J and not keys.L:
+        movXneg = True
+    if keys.L and not keys.J:
+        movX    = True
+    if movZneg and movXneg:
+        ball.vxBonus = abs(ball.vx) / 2 * -0.707106781
+        ball.vzBonus = abs(ball.vz) / 2 * -0.707106781
+    if movZ and movXneg:
+        ball.vxBonus = abs(ball.vx) / 2 * -0.707106781
+        ball.vzBonus = abs(ball.vz) / 2 *  0.707106781
+    if movZneg and movX:
+        ball.vxBonus = abs(ball.vx) / 2 *  0.707106781
+        ball.vzBonus = abs(ball.vz) / 2 * -0.707106781
+    if movZ and movX:
+        ball.vxBonus = abs(ball.vx) / 2 *  0.707106781
+        ball.vzBonus = abs(ball.vz) / 2 *  0.707106781
+    if movZneg and not movXneg and not movX:
+        ball.vzBonus = abs(ball.vz) / 2 * -1
+    if movZ and not movXneg and not movX:
+        ball.vzBonus = abs(ball.vz) / 2
+    if movXneg and not movZneg and not movZ:
+        ball.vxBonus = abs(ball.vx) / 2 * -1
+    if movX and not movZneg and not movZ:
+        ball.vxBonus = abs(ball.vx) / 2
+
 def botMove():
     if game.botRight:    
         keys.LEFT_ARROW = False
@@ -189,7 +236,6 @@ def botMove():
             keys.Z = True
 
 def drawBall():
-    global ball, paddle, game
     ball.framesSinceFreeze += 1
     ball.framesSinceSlow += 1
     if ball.framesSinceSlow == 300:
@@ -197,13 +243,11 @@ def drawBall():
             ball.vx *= 2
             ball.vz *= 2
             ball.vy *= 2
-            botPredict()
     if ball.framesSinceSlow == 0:
             ball.velocityFactorAfterWallCollition /= 2
             ball.vx /= 2
             ball.vz /= 2
             ball.vy /= 2
-            botPredict()
     if isUnderPaddle():
         if isOverPaddles():
             if game.onPlatformLeft and game.abilityLeft == 1 and float(random(1)) < float(0.2): 
@@ -220,7 +264,6 @@ def drawBall():
 
             ball.vy = ball.velocityAfterPaddleCollition #* (1 + game.difficulty * 0.05)
             ball.colorBonus = 135
-            botPredict()
 
         else:
             if ball.x > 0:
@@ -295,10 +338,12 @@ def drawBall():
         ball.vx = max(abs(ball.vx), abs(ball.vxMin * (1 + game.difficulty * 0.25)))*(ball.vx / abs(ball.vx))
         ball.vz *= ball.fz
         ball.vz = max(abs(ball.vz), abs(ball.vzMin * (1 + game.difficulty * 0.25)))*(ball.vz / abs(ball.vz))
-        ball.x += ball.vx
+        ball.x += ball.vx + ball.vxBonus
         ball.z += ball.vz
-        ball.y += ball.vy
+        ball.y += ball.vy + ball.vzBonus
         ball.vy += ball.a
+    if not game.autoBall:
+        playBall()
     noStroke()
     fill(ball.colors[0] + ball.colorBonus,
          ball.colors[1] + ball.colorBonus * ((255 - ball.colors[1]) / 135),
@@ -351,7 +396,6 @@ def drawBall():
         popMatrix()
 
 def drawMenu():
-    global game
     noStroke()
     buttonWidth = width / (len(game.abilities) + 3)
     spaceWidth  = (width - buttonWidth * (len(game.abilities) + 2)) / (len(game.abilities) - 1)
@@ -603,7 +647,6 @@ def drawFrame():
     drawBall()
 
 def draw():
-    global keys, paddle, ball, game
     if game.scoreLeft >= game.setPoints:
         game.announcedText       = "Set won by Blue, abilities reset"
         game.announcedTextFrames = 400
@@ -627,7 +670,6 @@ def draw():
     else: drawMenu()
 
 def keyPressed():
-    global keys
     if keyCode == 60:
         keys.INFERIOR = True
     if keyCode == 70:
@@ -647,10 +689,19 @@ def keyPressed():
     if keyCode == 40:
         keys.DOWN_ARROW = True
     if keyCode == 39:
-        keys.RIGHT_ARROW = True
-
+        keys.RIGHT_ARROW = True 
+    if keyCode == 73:
+        keys.I = True
+    if keyCode == 74:
+        keys.J = True
+    if keyCode == 75:
+        keys.K = True
+    if keyCode == 76:
+        keys.L = True
+    if keyCode == 72:
+        keys.H = True
+    
 def keyReleased():
-    global keys
     if keyCode == 60:
         keys.INFERIOR = False
     if keyCode == 70:
@@ -671,21 +722,27 @@ def keyReleased():
         keys.DOWN_ARROW = False
     if keyCode == 39:
         keys.RIGHT_ARROW = False
+    if keyCode == 73:
+        keys.I = False
+    if keyCode == 74:
+        keys.J = False
+    if keyCode == 75:
+        keys.K = False
+    if keyCode == 76:
+        keys.L = False
+    if keyCode == 72:
+        keys.H = False
 
 def mouseClicked():
-    global game
     game.mouseClicked = True
 
 def isUnderground():
-    global ball
     return ball.y > height
 
 def isUnderPaddle():
-    global ball
     return ball.y >= height/2 - paddle.sideLen / 16 - ball.size/2
 
 def isOverPaddles():
-    global ball, paddle
     game.onPlatformLeft = ball.x+ball.size > paddle.leftX - (paddle.sideLen * leftSizeFactor)/2 and ball.x - \
         ball.size < paddle.leftX + (paddle.sideLen * leftSizeFactor)/2 and \
         ball.z+ball.size > paddle.leftZ - (paddle.sideLen * leftSizeFactor)/2 and ball.z - \
@@ -697,7 +754,6 @@ def isOverPaddles():
     return game.onPlatformLeft or game.onPlatformRight
 
 def isStrictlyOverPaddles():
-    global ball, paddle
     game.onPlatformLeft = ball.x-ball.size > paddle.leftX - paddle.sideLen/2 and ball.x + \
         ball.size < paddle.leftX + paddle.sideLen/2 and \
         ball.z-ball.size > paddle.leftZ - paddle.sideLen/2 and ball.z + \
@@ -709,13 +765,11 @@ def isStrictlyOverPaddles():
     return game.onPlatformLeft or game.onPlatformRight
 
 def isCollidingWithWallX():
-    global ball
     onWallNegX = ball.x-ball.size <= -width/2  # X
     onWallPosX = ball.x+ball.size >= width/2
     return onWallNegX or onWallPosX
 
 def isCollidingWithWallZ():
-    global ball
     onWallNegZ = ball.z-ball.size <= -width/4  # Z
     onWallPosZ = ball.z+ball.size >= width/4
     return onWallNegZ or onWallPosZ
