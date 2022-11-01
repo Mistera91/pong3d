@@ -2,21 +2,34 @@ def setup():
     global keys, paddle, ball, game, spoofBall
     fullScreen(P3D)
     class game:
-        showShadow            = True
-        showPredictedLocation = True
-        scaryBots             = False
-        botRight              = True
-        botLeft               = True
-        autoBall              = False
-        ballControlPower      = 5
-        setPoints             = 5
+        # Config vars
+        showShadow            = True  # Shows a shadow under the ball
+        showPredictedLocation = True  # Shows the output of botPredict() with a second ball
+        scaryBots             = False # The bots will only move the less they can. Not recommended with controlledBall enabled
+        botRight              = True  # Enables the right player as a bot
+        botLeft               = False # Enables the left player as a bot
+        controlledBall        = True  # Enables ball control
+        ballControlNerf       = 2     # 1 is for total control, 2 is for half control, etc...
+        setPoints             = 5     # How much points are needed for a set
+        scoreLeft             = 0     # Starting score for the left player
+        scoreRight            = 0     # Starting score for the right player
+        setsLeft              = 0     # Starting sets for the left player
+        setsRight             = 0     # Starting sets for the right player
+        abilityLeft           = -1    # The ability for the left player. Set to -1 to let them choose instead
+        abilityRight          = -1    # The ability for the right player. Set to -1 to let them choose instead
+        difficulty            = 0     # Starting difficulty. Only occurs for the first point
+        abilities = [                 # The list of abilities. Add a "#" symbol at the beginning of a line to disable the ability
+["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                   ],
+["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"         ],
+["Sprint pad"  , "a3.png" , "Increases the speed of the paddle"                                                                  ],
+["Big freeze"  , "a4.png" , "Briefly frezzes the ball when you use it.\nIt can only be used 3 times per game"                    ],
+["Confusion"   , "a5.png" , "Inverts the controls of the opposite player for a short time.\nIt can only be used 3 times per game"],
+["Small freeze", "a6.png" , "Slows the ball for a short time.\nIt can only be used 3 times per game"                             ],
+["Darkness"    , "a7.png" , "Reduces the light onto the enemy side for a short time.\nIt can only be used 3 times per game"      ],
+["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
+]
+        # Vars
         rainbow               = 0
-        scoreLeft             = 0
-        scoreRight            = 0
-        setsLeft              = 0
-        setsRight             = 0
-        abilityLeft           = 7
-        abilityRight          = 7
         abilityCountLeft      = 3
         abilityCountRight     = 3
         rightTextColorBonus   = 0
@@ -35,25 +48,12 @@ def setup():
         framesForDifficulty   = 600
         announcedText         = ""
         announcedTextFrames   = 0
-        difficulty            = 0
-        abilities = [
-["Biggle"      , "a1.png" , "Increases the size of the paddle"                                                                   ],
-["Zoom ball"   , "a2.png" , "Increases the speed of the ball after it touches your paddle. Does not triggers every time"         ],
-["Sprint pad"  , "a3.png" , "Increases the speed of the paddle"                                                                  ],
-["Big freeze"  , "a4.png" , "Briefly frezzes the ball when you use it.\nIt can only be used 3 times per game"                    ],
-["Confusion"   , "a5.png" , "Inverts the controls of the opposite player for a short time.\nIt can only be used 3 times per game"],
-["Small freeze", "a6.png" , "Slows the ball for a short time.\nIt can only be used 3 times per game"                             ],
-["Darkness"    , "a7.png" , "Reduces the light onto the enemy side for a short time.\nIt can only be used 3 times per game"      ],
-["Rainbow pad" , "a8.png" , "Changes the color of your paddle. Does nothing else"                                                ]
-]
         buttonsCoords = [None for i in range(len(abilities))]
         if botRight and abilityRight == -1 :
             abilityRight = int(random(0, len(abilities)))
         if botLeft and abilityLeft == -1 :
             abilityLeft = int(random(0, len(abilities)))
         # Converting ballControlPower into values that the program will actually use (not human friendly values)
-        slowBallControlPower      = 1 - ballControlPower / float(100)
-        fastBallControlPower      = 1 + ballControlPower / float(100)
 
     class keys:
         Z = False
@@ -220,7 +220,7 @@ def playBall():
         ball.vxBonus = abs(ball.vx) / 2
 
 def botMove():
-    if game.botRight and spoofBall.x > 0:    
+    if game.botRight and (spoofBall.x > 0 or not game.controlledBall):    
         keys.LEFT_ARROW = False
         keys.RIGHT_ARROW = False
         keys.UP_ARROW = False
@@ -243,7 +243,7 @@ def botMove():
                 keys.DOWN_ARROW = True
             elif spoofBall.predBallZ < paddle.rightZ - paddle.sideLen / 16:
                 keys.UP_ARROW = True
-    if game.botLeft and spoofBall.x < 0:
+    if game.botLeft and (spoofBall.x < 0 or not game.controlledBall):
         keys.Q = False
         keys.D = False
         keys.Z = False
@@ -369,11 +369,11 @@ def drawBall():
         ball.vz = max(abs(ball.vz), abs(ball.vzMin * (1 + game.difficulty * 0.25)))*(ball.vz / abs(ball.vz))
         ball.x += ball.vx + ball.vxBonus
         ball.x = constrain(ball.x, -width/2 + ball.size, width/2 - ball.size)
-        ball.z += ball.vz
+        ball.z += ball.vz + ball.vzBonus
         ball.z = constrain(ball.z, -width/4 + ball.size, width/4 - ball.size)
-        ball.y += ball.vy + ball.vzBonus
+        ball.y += ball.vy
         ball.vy += ball.a
-    if not game.autoBall:
+    if game.controlledBall:
         playBall()
     noStroke()
     fill(ball.colors[0] + ball.colorBonus,
