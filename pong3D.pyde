@@ -3,6 +3,7 @@ def setup():
     fullScreen(P3D)
     class game:
         # Config vars
+        showFrameRate         = True  # Shows the frameRate on top of the screen
         showShadow            = True  # Shows a shadow under the ball
         showPredictedLocation = True  # Shows the output of botPredict() with a second ball
         scaryBots             = False # The bots will only move the less they can. Not recommended with controlledBall enabled
@@ -53,7 +54,6 @@ def setup():
             abilityRight = int(random(0, len(abilities)))
         if botLeft and abilityLeft == -1 :
             abilityLeft = int(random(0, len(abilities)))
-        # Converting ballControlPower into values that the program will actually use (not human friendly values)
 
     class keys:
         Z = False
@@ -418,6 +418,16 @@ def drawBall():
     fill(255)
     text(game.announcedText, 0, 0)
     popMatrix()
+    # Framerate
+    if game.showFrameRate:
+        pushMatrix()
+        translate(0, -height/2.5, width/4)
+        textMode(SHAPE)
+        textAlign(CENTER, CENTER)
+        textSize(48)
+        fill(255,  255 * ((frameRate - 30) / 30), 255 * ((frameRate - 30) / 30))
+        text(str(int(frameRate)) + "fps", 0, 0)
+        popMatrix()
     # Shadow
     if game.showShadow:
         pushMatrix()
