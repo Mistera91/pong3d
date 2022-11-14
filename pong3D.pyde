@@ -493,7 +493,7 @@ def drawFrame():
             keys.INFERIOR = True
     game.framesToDifficulty += 1
     if game.framesToDifficulty % game.framesForDifficulty == 0:
-        game.difficulty         += 1
+        game.difficulty         += 2
         game.announcedText       = "Difficulty increased !"
         game.announcedTextFrames = 255
     game.announcedTextFrames  -= 1
@@ -523,13 +523,13 @@ def drawFrame():
     if (keys.F and game.abilityLeft == 4 and game.abilityCountLeft >= 1) and game.framesConfusionRight > 100 and not game.botRight:
         keys.F                    = False
         game.announcedText        = "Red got confused !"
-        game.announcedTextFrames  = 300
+        game.announcedTextFrames  = 100
         game.framesConfusionRight = 0
         game.abilityCountLeft    -= 1
     if (keys.INFERIOR and game.abilityRight == 4 and game.abilityCountRight >= 1) and game.framesConfusionLeft > 100 and not game.botLeft:
         keys.INFERIOR = False
         game.announcedText       = "Blue got confused !"
-        game.announcedTextFrames = 300
+        game.announcedTextFrames = 100
         game.framesConfusionLeft = 0
         game.abilityCountRight  -= 1
     if (keys.F and game.abilityLeft == 6 and game.abilityCountLeft >= 1) and game.framesDarknessRight > 300 and game.framesDarknessLeft > 300:
