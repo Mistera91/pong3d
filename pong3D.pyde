@@ -5,9 +5,9 @@ def setup():
         # Config vars
         showFrameRate         = True  # Shows the frameRate on top of the screen
         showShadow            = True  # Shows a shadow under the ball
-        showPredictedLocation = True  # Shows the output of botPredict() with a second ball
+        showPredictedLocation = False  # Shows the output of botPredict() with a second ball
         scaryBots             = False # The bots will only move the less they can. Not recommended with controlledBall enabled
-        botRight              = True  # Enables the right player as a bot
+        botRight              = False  # Enables the right player as a bot
         botLeft               = False # Enables the left player as a bot
         controlledBall        = True  # Enables ball control
         ballControlNerf       = 2     # 1 is for total control, 2 is for half control, etc...
@@ -104,10 +104,12 @@ def setup():
         colorBonus = 0
         size = height // 20
         # Vars
-        vx = int(random(1, 8))
+        vx = float(random(1, 8))
         vxBonus = 0
         vy = -10
-        vz = int(random(1, 8))
+        vz = float(random(1, 8))
+        if float(random(1)) > float(0.5):
+            ball.vz *= -1
         vzBonus = 0
         x = 0
         y = 0
@@ -306,13 +308,13 @@ def drawBall():
                 game.scoreRight += 1
                 game.rightTextColorBonus = 200
             game.framesToRestart = 0
-            ball.vx = int(random(1, 8))
+            ball.vx = float(random(1, 8))
 
             if float(random(1)) > float(0.5):
                 ball.vx *= -1
 
             ball.vy = -10
-            ball.vz = int(random(1, 8))
+            ball.vz = float(random(1, 8))
 
             if float(random(1)) > float(0.5):
                 ball.vz *= -1
