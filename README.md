@@ -1,6 +1,6 @@
 # pong3d
 
-#### Pong3D using PyProcessing ([py.processing.org](py.processing.org))
+#### Pong3D using PyProcessing ([py.processing.org](https://py.processing.org))
 
 ## How to run :
 
